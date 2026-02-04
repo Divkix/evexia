@@ -23,8 +23,8 @@ export function OTPInput({
   const inputRefs = React.useRef<(HTMLInputElement | null)[]>([])
   const [focusedIndex, setFocusedIndex] = React.useState<number | null>(null)
 
-  // Pad value to match length
-  const digits = value.padEnd(length, '').split('').slice(0, length)
+  // Create array of digits, filling empty slots
+  const digits = Array.from({ length }, (_, i) => value[i] || '')
 
   const focusInput = (index: number) => {
     const clampedIndex = Math.max(0, Math.min(index, length - 1))
