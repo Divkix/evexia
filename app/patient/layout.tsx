@@ -84,7 +84,7 @@ export default function PatientDashboardLayout({
 
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-background">
+      <div className="flex h-screen overflow-hidden bg-background">
         {/* Sidebar skeleton */}
         <aside className="flex w-64 flex-col border-r border-sidebar-border bg-sidebar">
           <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
@@ -112,7 +112,7 @@ export default function PatientDashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
       <aside className="flex w-64 flex-col border-r border-sidebar-border bg-sidebar">
         {/* Logo and title */}

@@ -270,7 +270,7 @@ export default function ProviderPortalPage() {
             </p>
           </div>
           <Button onClick={handleNewAccess} variant="outline">
-            New Access Request
+            View Different Patient
           </Button>
         </div>
 
