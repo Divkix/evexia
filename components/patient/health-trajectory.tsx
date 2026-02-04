@@ -10,7 +10,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -34,7 +34,9 @@ export interface Prediction {
 }
 
 interface HealthTrajectoryProps {
-  patientId: string
+  predictions: Prediction[]
+  isLoading: boolean
+  isRegenerating: boolean
 }
 
 function getRiskConfig(risk: Prediction['currentRisk']) {
@@ -239,34 +241,17 @@ function HealthTrajectorySkeleton() {
   )
 }
 
-export function HealthTrajectory({ patientId }: HealthTrajectoryProps) {
-  const [predictions, setPredictions] = useState<Prediction[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-
-  const fetchPredictions = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/patient/${patientId}/summary`)
-      if (!response.ok) {
-        setPredictions([])
-        return
-      }
-      const data = await response.json()
-      setPredictions(data.predictions || [])
-    } catch {
-      setPredictions([])
-    } finally {
-      setIsLoading(false)
-    }
-  }, [patientId])
-
-  useEffect(() => {
-    fetchPredictions()
-  }, [fetchPredictions])
-
-  if (isLoading) {
+export function HealthTrajectory({
+  predictions,
+  isLoading,
+  isRegenerating,
+}: HealthTrajectoryProps) {
+  // Show skeleton when loading initial data or regenerating
+  if (isLoading || isRegenerating) {
     return <HealthTrajectorySkeleton />
   }
 
+  // Don't render section if no predictions
   if (!predictions || predictions.length === 0) {
     return null
   }
