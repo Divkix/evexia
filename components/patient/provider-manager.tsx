@@ -43,6 +43,22 @@ import {
 
 const SCOPE_OPTIONS = ['Vitals', 'Labs', 'Medications', 'Encounters'] as const
 
+// Mapping between DB values and display values
+const DB_TO_DISPLAY: Record<string, string> = {
+  vitals: 'Vitals',
+  labs: 'Labs',
+  meds: 'Medications',
+  medications: 'Medications', // Handle both variants
+  encounters: 'Encounters',
+}
+
+const DISPLAY_TO_DB: Record<string, string> = {
+  Vitals: 'vitals',
+  Labs: 'labs',
+  Medications: 'meds',
+  Encounters: 'encounters',
+}
+
 interface Provider {
   id: string
   patientId: string
@@ -108,6 +124,7 @@ function getScopeVariant(
     case 'labs':
       return 'secondary'
     case 'medications':
+    case 'meds':
       return 'outline'
     case 'encounters':
       return 'destructive'
@@ -172,7 +189,7 @@ export function ProviderManager({ patientId }: ProviderManagerProps) {
       providerName: provider.providerName,
       providerOrg: provider.providerOrg ?? '',
       providerEmail: provider.providerEmail ?? '',
-      scope: provider.scope,
+      scope: provider.scope.map((s) => DB_TO_DISPLAY[s.toLowerCase()] ?? s),
     })
     setIsDialogOpen(true)
   }
@@ -187,9 +204,12 @@ export function ProviderManager({ patientId }: ProviderManagerProps) {
     try {
       const url = `/api/patient/${patientId}/providers`
       const method = selectedProvider ? 'PATCH' : 'POST'
+      const scopeForDb = values.scope.map(
+        (s) => DISPLAY_TO_DB[s] ?? s.toLowerCase(),
+      )
       const body = selectedProvider
-        ? { providerId: selectedProvider.id, ...values }
-        : values
+        ? { providerId: selectedProvider.id, ...values, scope: scopeForDb }
+        : { ...values, scope: scopeForDb }
 
       const response = await fetch(url, {
         method,
@@ -300,7 +320,7 @@ export function ProviderManager({ patientId }: ProviderManagerProps) {
                           {provider.scope.length > 0 ? (
                             provider.scope.map((s) => (
                               <Badge key={s} variant={getScopeVariant(s)}>
-                                {s}
+                                {DB_TO_DISPLAY[s.toLowerCase()] ?? s}
                               </Badge>
                             ))
                           ) : (
