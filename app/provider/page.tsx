@@ -1,6 +1,7 @@
 'use client'
 
-import { AlertTriangle, Info, Key, Mail } from 'lucide-react'
+import { AlertTriangle, Home, Info, Key, Mail } from 'lucide-react'
+import Link from 'next/link'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { HealthCharts } from '@/components/patient/health-charts'
@@ -269,9 +270,17 @@ export default function ProviderPortalPage() {
               Viewing records for {accessData.patientName}
             </p>
           </div>
-          <Button onClick={handleNewAccess} variant="outline">
-            View Different Patient
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handleNewAccess} variant="outline">
+              View Different Patient
+            </Button>
+            <Link href="/">
+              <Button variant="ghost">
+                <Home className="mr-2 h-4 w-4" />
+                Exit Portal
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Patient Info Card */}
@@ -603,6 +612,14 @@ export default function ProviderPortalPage() {
               )}
             </TabsContent>
           </Tabs>
+          <div className="mt-4 text-center">
+            <Link
+              href="/"
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              ← Back to Home
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>

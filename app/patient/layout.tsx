@@ -75,7 +75,7 @@ export default function PatientDashboardLayout({
     try {
       // Clear supabase session via API
       await fetch('/api/auth/logout', { method: 'POST' })
-      router.replace('/patient/login')
+      router.replace('/')
     } catch (error) {
       console.error('Logout failed:', error)
       setLoggingOut(false)
