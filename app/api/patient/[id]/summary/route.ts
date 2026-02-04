@@ -22,10 +22,10 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     const summary = await getPatientSummary(id)
 
     if (!summary) {
-      return NextResponse.json({
-        success: false,
-        error: 'No summary generated yet',
-      })
+      return NextResponse.json(
+        { error: 'No summary generated yet' },
+        { status: 404 },
+      )
     }
 
     return NextResponse.json({
@@ -77,10 +77,10 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
     const records = await getPatientRecords(id)
 
     if (records.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'No records found. Cannot generate summary.',
-      })
+      return NextResponse.json(
+        { error: 'No records found. Cannot generate summary.' },
+        { status: 422 },
+      )
     }
 
     const summaryResult = await generateSummary(records)

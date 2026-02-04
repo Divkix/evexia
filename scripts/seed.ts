@@ -6,6 +6,7 @@ import {
   patientProviders,
   patients,
   records,
+  summaries,
 } from '../lib/db/schema'
 
 const DEMO_PATIENTS = [
@@ -205,13 +206,18 @@ async function seed() {
     const patientId = demoPatient.id
 
     // Delete old patient if exists with different ID (cleanup from old seeds)
-    if (existingByEmail.length > 0 && existingByEmail[0].id !== demoPatient.id) {
+    if (
+      existingByEmail.length > 0 &&
+      existingByEmail[0].id !== demoPatient.id
+    ) {
       console.log(`Removing old patient record for ${demoPatient.name}...`)
       await db.delete(patients).where(eq(patients.id, existingByEmail[0].id))
     }
 
     if (existingById.length > 0) {
-      console.log(`Patient ${demoPatient.name} exists with correct ID, updating...`)
+      console.log(
+        `Patient ${demoPatient.name} exists with correct ID, updating...`,
+      )
       await db
         .update(patients)
         .set(demoPatient)
@@ -404,6 +410,39 @@ async function seed() {
     console.log(
       `Inserted ${recordsToInsert.length} records for ${demoPatient.name}`,
     )
+
+    // Seed demo summary for immediate display
+    await db.delete(summaries).where(eq(summaries.patientId, patientId))
+
+    await db.insert(summaries).values({
+      patientId,
+      clinicianSummary: `Patient shows improving metabolic indicators.
+BMI trending down from 26.5 to 25.5 over 9-month period.
+Blood pressure well-controlled at 120/76 mmHg on Lisinopril 10mg.
+A1C improved from 6.2% to 5.9%, currently in prediabetic range.
+Lipid panel improving on Atorvastatin 20mg: LDL reduced from 130 to 118.
+Weight loss of 7 lbs achieved through lifestyle modifications.
+Continue current medication regimen and lifestyle interventions.`,
+      patientSummary: `Your health metrics are improving! You've lost about 7 pounds over the past nine months, and your blood pressure and blood sugar levels are trending in the right direction. Keep up the good work with your diet and exercise routine. Your medications are working well, so continue taking them as prescribed.`,
+      anomalies: [
+        {
+          type: 'Elevated BMI',
+          message: 'BMI of 25.5 is slightly above normal range (18.5-24.9)',
+          severity: 'warning',
+          value: 25.5,
+          threshold: 24.9,
+        },
+        {
+          type: 'Prediabetes',
+          message: 'A1C of 5.9% indicates prediabetic range (5.7-6.4%)',
+          severity: 'warning',
+          value: '5.9%',
+          threshold: '5.7%',
+        },
+      ],
+      modelUsed: 'demo-seeded',
+    })
+    console.log(`Seeded AI summary for ${demoPatient.name}`)
 
     // Create provider relationships - all doctors can access all patients
     await db
