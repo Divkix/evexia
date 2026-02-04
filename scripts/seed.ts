@@ -288,7 +288,7 @@ async function seed() {
       ...generateLabs(patientId, 'Banner Health', [
         {
           date: '2024-01-15',
-          total_cholesterol: 215,
+          totalCholesterol: 215,
           a1c: 6.2,
           ldl: 130,
           hdl: 45,
@@ -296,7 +296,7 @@ async function seed() {
         },
         {
           date: '2024-07-10',
-          total_cholesterol: 205,
+          totalCholesterol: 205,
           a1c: 6.0,
           ldl: 122,
           hdl: 48,
@@ -307,7 +307,7 @@ async function seed() {
       ...generateLabs(patientId, 'Mayo Clinic', [
         {
           date: '2024-02-28',
-          total_cholesterol: 210,
+          totalCholesterol: 210,
           a1c: 6.1,
           ldl: 126,
           hdl: 46,
@@ -315,7 +315,7 @@ async function seed() {
         },
         {
           date: '2024-08-15',
-          total_cholesterol: 198,
+          totalCholesterol: 198,
           a1c: 5.9,
           ldl: 118,
           hdl: 50,
@@ -326,7 +326,7 @@ async function seed() {
       ...generateLabs(patientId, 'Phoenician Medical Center', [
         {
           date: '2024-05-20',
-          total_cholesterol: 208,
+          totalCholesterol: 208,
           a1c: 6.0,
           ldl: 124,
           hdl: 47,

@@ -65,6 +65,8 @@ export interface Summary {
   clinicianSummary: string | null
   patientSummary: string | null
   anomalies: Json | null
+  equityConcerns: Json | null
+  predictions: Json | null
   modelUsed: string | null
   createdAt: string
 }
@@ -99,20 +101,15 @@ export async function saveSummary(
   // Delete existing summaries for this patient
   await supabase.from('summaries').delete().eq('patient_id', patientId)
 
-  // Store anomalies, equity concerns, and predictions in the anomalies jsonb column
-  const anomaliesData = {
-    anomalies: data.anomalies,
-    equityConcerns: data.equityConcerns,
-    predictions: data.predictions,
-  }
-
   const { data: summary, error } = await supabase
     .from('summaries')
     .insert({
       patient_id: patientId,
       clinician_summary: data.clinicianSummary,
       patient_summary: data.patientSummary,
-      anomalies: anomaliesData as unknown as Json,
+      anomalies: data.anomalies as unknown as Json,
+      equity_concerns: data.equityConcerns as unknown as Json,
+      predictions: data.predictions as unknown as Json,
       model_used: data.modelUsed,
     })
     .select()
@@ -188,43 +185,47 @@ export async function checkSummaryRateLimit(
 }
 
 /**
- * Parse the stored anomalies JSON to extract all summary data components.
- * Handles both legacy format (plain array) and new format (object with nested arrays).
+ * Parse the stored anomalies JSON to extract anomalies array.
+ * Handles both legacy format (object with nested arrays) and new format (plain array).
  */
-export function parseSummaryAnomalies(anomaliesJson: Json | null): {
-  anomalies: Anomaly[]
-  equityConcerns: EquityConcern[]
-  predictions: Prediction[]
-} {
+export function parseSummaryAnomalies(anomaliesJson: Json | null): Anomaly[] {
   if (!anomaliesJson) {
-    return { anomalies: [], equityConcerns: [], predictions: [] }
+    return []
   }
 
-  // Handle legacy format: plain array of anomalies
+  // Handle new format: plain array of anomalies
   if (Array.isArray(anomaliesJson)) {
-    return {
-      anomalies: anomaliesJson as unknown as Anomaly[],
-      equityConcerns: [],
-      predictions: [],
-    }
+    return anomaliesJson as unknown as Anomaly[]
   }
 
-  // Handle new format: object with nested arrays
+  // Handle legacy format: object with nested arrays (for backward compatibility)
   const data = anomaliesJson as {
     anomalies?: unknown[]
-    equityConcerns?: unknown[]
-    predictions?: unknown[]
   }
 
-  return {
-    anomalies: Array.isArray(data.anomalies)
-      ? (data.anomalies as unknown as Anomaly[])
-      : [],
-    equityConcerns: Array.isArray(data.equityConcerns)
-      ? (data.equityConcerns as unknown as EquityConcern[])
-      : [],
-    predictions: Array.isArray(data.predictions)
-      ? (data.predictions as unknown as Prediction[])
-      : [],
+  return Array.isArray(data.anomalies)
+    ? (data.anomalies as unknown as Anomaly[])
+    : []
+}
+
+/**
+ * Parse equity concerns JSON from the dedicated column.
+ */
+export function parseEquityConcerns(
+  equityConcernsJson: Json | null,
+): EquityConcern[] {
+  if (!equityConcernsJson || !Array.isArray(equityConcernsJson)) {
+    return []
   }
+  return equityConcernsJson as unknown as EquityConcern[]
+}
+
+/**
+ * Parse predictions JSON from the dedicated column.
+ */
+export function parsePredictions(predictionsJson: Json | null): Prediction[] {
+  if (!predictionsJson || !Array.isArray(predictionsJson)) {
+    return []
+  }
+  return predictionsJson as unknown as Prediction[]
 }
