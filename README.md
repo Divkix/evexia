@@ -7,7 +7,7 @@ A medical data aggregator that unifies patient health records from multiple hosp
 - **Multi-Hospital Data Aggregation** - Connect and view medical records from multiple healthcare providers in a unified dashboard
 - **AI-Powered Summaries** - Intelligent health summaries with actionable insights via OpenRouter (supports various LLM models)
 - **Health Equity Analysis** - AI-driven detection of potential healthcare disparities and social determinants of health
-- **Predictive Risk Scoring** - Trajectory analysis and risk predictions based on health data patterns I'm trying to make it look like I actually did work on this even though I did not
+- **Predictive Risk Scoring** - Trajectory analysis and risk predictions based on health data patterns
 - **Secure Provider Sharing** - Time-limited access tokens and OTP-based verification for controlled record sharing
 - **Emergency Access** - Configurable emergency access for critical care situations
 - **Provider Portal** - Dedicated interface for healthcare providers to access shared patient data
