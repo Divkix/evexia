@@ -10,6 +10,7 @@ import {
 
 const DEMO_PATIENTS = [
   {
+    id: '00000000-0000-0000-0000-000000000001', // p-001
     name: 'Divanshu Chauhan',
     email: 'chauhan.divanshu@gmail.com',
     dateOfBirth: '2003-01-09',
@@ -17,6 +18,7 @@ const DEMO_PATIENTS = [
     allowEmergencyAccess: true, // Enable emergency ER access for demo
   },
   {
+    id: '00000000-0000-0000-0000-000000000002', // p-002
     name: 'Manushri Kumar',
     email: 'manushrimkumar@gmail.com',
     dateOfBirth: '2005-02-15',
@@ -24,6 +26,7 @@ const DEMO_PATIENTS = [
     allowEmergencyAccess: false,
   },
   {
+    id: '00000000-0000-0000-0000-000000000003', // p-003
     name: 'Shriya Vallabha',
     email: 'Shriya.vallabha@gmail.com',
     dateOfBirth: '2005-06-07',
@@ -48,6 +51,7 @@ type DemoEmployee = {
 }
 
 const DEMO_EMPLOYEES: DemoEmployee[] = [
+  // EMP-001 for each clinic
   {
     employeeId: 'EMP-001',
     name: 'Dr. Sarah Chen',
@@ -56,31 +60,41 @@ const DEMO_EMPLOYEES: DemoEmployee[] = [
     department: 'Primary Care',
   },
   {
-    employeeId: 'EMP-001', // Same ID, different org!
+    employeeId: 'EMP-001',
     name: 'Dr. John Smith',
     orgSlug: 'mayo-clinic',
     email: 'john.smith@mayoclinic.example',
     department: 'Internal Medicine',
   },
   {
-    employeeId: 'EMP-002',
-    name: 'Dr. Michael Rivera',
-    orgSlug: 'mayo-clinic',
-    email: 'michael.rivera@mayoclinic.example',
-    department: 'Cardiology',
-  },
-  {
-    employeeId: 'EMP-003',
+    employeeId: 'EMP-001',
     name: 'Dr. Emily Watson',
     orgSlug: 'phoenician-medical',
     email: 'emily.watson@phoenicianmed.example',
     department: 'Endocrinology',
   },
+  // ER-001 for each clinic
   {
     employeeId: 'ER-001',
     name: 'Dr. Emergency Response',
     orgSlug: 'banner-health',
     email: 'er.doctor@bannerhealth.example',
+    department: 'Emergency',
+    isEmergencyStaff: true,
+  },
+  {
+    employeeId: 'ER-001',
+    name: 'Dr. Emergency Response',
+    orgSlug: 'mayo-clinic',
+    email: 'er.doctor@mayoclinic.example',
+    department: 'Emergency',
+    isEmergencyStaff: true,
+  },
+  {
+    employeeId: 'ER-001',
+    name: 'Dr. Emergency Response',
+    orgSlug: 'phoenician-medical',
+    email: 'er.doctor@phoenicianmed.example',
     department: 'Emergency',
     isEmergencyStaff: true,
   },
@@ -175,29 +189,36 @@ async function seed() {
   for (const demoPatient of DEMO_PATIENTS) {
     console.log(`\nProcessing patient: ${demoPatient.name}`)
 
-    // Check if patient exists
-    const existing = await db
+    // Check if patient exists by email or target ID
+    const existingByEmail = await db
       .select()
       .from(patients)
       .where(eq(patients.email, demoPatient.email))
       .limit(1)
 
-    let patientId: string
+    const existingById = await db
+      .select()
+      .from(patients)
+      .where(eq(patients.id, demoPatient.id))
+      .limit(1)
 
-    if (existing.length > 0) {
-      console.log(`Patient ${demoPatient.name} already exists, updating...`)
-      patientId = existing[0].id
+    const patientId = demoPatient.id
+
+    // Delete old patient if exists with different ID (cleanup from old seeds)
+    if (existingByEmail.length > 0 && existingByEmail[0].id !== demoPatient.id) {
+      console.log(`Removing old patient record for ${demoPatient.name}...`)
+      await db.delete(patients).where(eq(patients.id, existingByEmail[0].id))
+    }
+
+    if (existingById.length > 0) {
+      console.log(`Patient ${demoPatient.name} exists with correct ID, updating...`)
       await db
         .update(patients)
         .set(demoPatient)
         .where(eq(patients.id, patientId))
     } else {
-      console.log(`Creating patient: ${demoPatient.name}...`)
-      const [patient] = await db
-        .insert(patients)
-        .values(demoPatient)
-        .returning()
-      patientId = patient.id
+      console.log(`Creating patient: ${demoPatient.name} (${patientId})...`)
+      await db.insert(patients).values(demoPatient)
     }
 
     console.log(`Patient ID: ${patientId}`)
@@ -354,15 +375,15 @@ async function seed() {
       ...generateEncounters(patientId, 'Mayo Clinic', [
         {
           date: '2024-02-28',
-          type: 'Cardiology Consult',
-          provider: 'Dr. Michael Rivera',
+          type: 'Internal Medicine Consult',
+          provider: 'Dr. John Smith',
           notes:
             'Cardiovascular risk assessment, recommended statin therapy, lifestyle modifications',
         },
         {
           date: '2024-08-15',
-          type: 'Cardiology Follow-up',
-          provider: 'Dr. Michael Rivera',
+          type: 'Internal Medicine Follow-up',
+          provider: 'Dr. John Smith',
           notes:
             'Lipid panel improved significantly, continue current regimen, recheck in 6 months',
         },
@@ -384,20 +405,38 @@ async function seed() {
       `Inserted ${recordsToInsert.length} records for ${demoPatient.name}`,
     )
 
-    // Create sample provider relationship for testing OTP access
+    // Create provider relationships - all doctors can access all patients
     await db
       .delete(patientProviders)
       .where(eq(patientProviders.patientId, patientId))
 
-    await db.insert(patientProviders).values({
-      patientId,
-      employeeId: employeeIds['banner-health:EMP-001'], // Link to Dr. Sarah Chen
-      providerName: 'Dr. Sarah Chen',
-      providerOrg: 'Banner Health',
-      providerEmail: 'sarah.chen@bannerhealth.example',
-      scope: ['vitals', 'labs', 'meds', 'encounters'],
-    })
-    console.log(`Created provider relationship for ${demoPatient.name}`)
+    await db.insert(patientProviders).values([
+      {
+        patientId,
+        employeeId: employeeIds['banner-health:EMP-001'],
+        providerName: 'Dr. Sarah Chen',
+        providerOrg: 'Banner Health',
+        providerEmail: 'sarah.chen@bannerhealth.example',
+        scope: ['vitals', 'labs', 'meds', 'encounters'],
+      },
+      {
+        patientId,
+        employeeId: employeeIds['mayo-clinic:EMP-001'],
+        providerName: 'Dr. John Smith',
+        providerOrg: 'Mayo Clinic',
+        providerEmail: 'john.smith@mayoclinic.example',
+        scope: ['vitals', 'labs', 'meds', 'encounters'],
+      },
+      {
+        patientId,
+        employeeId: employeeIds['phoenician-medical:EMP-001'],
+        providerName: 'Dr. Emily Watson',
+        providerOrg: 'Phoenician Medical Center',
+        providerEmail: 'emily.watson@phoenicianmed.example',
+        scope: ['vitals', 'labs', 'meds', 'encounters'],
+      },
+    ])
+    console.log(`Created 3 provider relationships for ${demoPatient.name}`)
   }
 
   console.log('\n=== Seed complete! ===')
