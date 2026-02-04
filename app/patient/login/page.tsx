@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -243,6 +244,14 @@ export default function PatientLoginPage() {
               </Button>
             </form>
           )}
+          <div className="mt-4 text-center">
+            <Link
+              href="/"
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              ← Back to Home
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>
