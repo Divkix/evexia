@@ -7,10 +7,10 @@ import { getPatientById } from '@/lib/supabase/queries/patients'
 import type { RecordCategory } from '@/lib/supabase/queries/records'
 import { getPatientRecords } from '@/lib/supabase/queries/records'
 import {
-  type Anomaly,
   filterAnomaliesByScope,
   getPatientSummary,
   hasFullAccess,
+  parseSummaryAnomalies,
 } from '@/lib/supabase/queries/summaries'
 import { getValidShareToken } from '@/lib/supabase/queries/tokens'
 import { extractChartData } from '@/lib/utils/medical'
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
             clinicianSummary: summary.clinicianSummary,
             patientSummary: summary.patientSummary,
             anomalies: filterAnomaliesByScope(
-              summary.anomalies as Anomaly[] | null,
+              parseSummaryAnomalies(summary.anomalies).anomalies,
               shareToken.scope,
             ),
             hasFullAccess: hasFullAccess(shareToken.scope),
