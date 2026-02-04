@@ -4,6 +4,7 @@ import { getPatientById } from '@/lib/supabase/queries/patients'
 import { getPatientRecords } from '@/lib/supabase/queries/records'
 import {
   getPatientSummary,
+  parseSummaryAnomalies,
   saveSummary,
 } from '@/lib/supabase/queries/summaries'
 
@@ -27,11 +28,15 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       )
     }
 
+    const parsed = parseSummaryAnomalies(summary.anomalies)
+
     return NextResponse.json({
       success: true,
       clinicianSummary: summary.clinicianSummary,
       patientSummary: summary.patientSummary,
-      anomalies: summary.anomalies,
+      anomalies: parsed.anomalies,
+      equityConcerns: parsed.equityConcerns,
+      predictions: parsed.predictions,
       modelUsed: summary.modelUsed,
       createdAt: summary.createdAt,
       disclaimer: MEDICAL_DISCLAIMER,
@@ -73,6 +78,8 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       clinicianSummary: summaryResult.data.clinicianSummary,
       patientSummary: summaryResult.data.patientSummary,
       anomalies: summaryResult.data.anomalies,
+      equityConcerns: summaryResult.data.equityConcerns,
+      predictions: summaryResult.data.predictions,
       modelUsed: summaryResult.data.modelUsed,
       createdAt: savedSummary.createdAt,
       disclaimer: MEDICAL_DISCLAIMER,
