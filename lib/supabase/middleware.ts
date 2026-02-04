@@ -39,12 +39,15 @@ export async function updateSession(request: NextRequest) {
     process.env.NODE_ENV !== 'production' &&
     process.env.BYPASS_AUTH_LOCAL === 'true'
 
+  // Check for demo session cookie (for demo patients using 12345678 code)
+  const hasDemoSession = request.cookies.has('demo_patient_id')
+
   // Protected routes that require authentication
   const isProtectedRoute =
     request.nextUrl.pathname.startsWith('/patient') &&
     !request.nextUrl.pathname.startsWith('/patient/login')
 
-  if (isProtectedRoute && !user && !bypassAuth) {
+  if (isProtectedRoute && !user && !bypassAuth && !hasDemoSession) {
     const url = request.nextUrl.clone()
     url.pathname = '/patient/login'
     return NextResponse.redirect(url)
