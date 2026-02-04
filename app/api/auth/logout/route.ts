@@ -7,7 +7,7 @@ export async function POST() {
     await supabase.auth.signOut()
 
     const response = NextResponse.json({ success: true })
-    response.cookies.delete('demo_patient_id')
+    response.cookies.delete({ name: 'demo_patient_id', path: '/' })
     return response
   } catch (error) {
     console.error('Logout error:', error)
