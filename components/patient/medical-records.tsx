@@ -92,11 +92,9 @@ function MedicalRecordsSkeleton() {
 function formatDate(dateString: string | null): string {
   if (!dateString) return 'N/A'
   try {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
+    return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(
+      new Date(dateString),
+    )
   } catch {
     return 'Invalid Date'
   }
@@ -133,9 +131,9 @@ function RecordRow({ record }: RecordRowProps) {
             className="gap-1"
           >
             {isExpanded ? (
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
             ) : (
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
             )}
             {isExpanded ? 'Hide' : 'Show'} Details
           </Button>
@@ -163,7 +161,10 @@ function RecordsTable({ records, emptyMessage }: RecordsTableProps) {
   if (records.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <FileText className="mb-4 h-12 w-12 text-muted-foreground" />
+        <FileText
+          className="mb-4 h-12 w-12 text-muted-foreground"
+          aria-hidden="true"
+        />
         <p className="text-muted-foreground">{emptyMessage}</p>
       </div>
     )

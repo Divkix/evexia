@@ -201,7 +201,7 @@ export function HealthSummary({ patientId }: HealthSummaryProps) {
   if (error) {
     return (
       <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
+        <AlertTriangle className="h-4 w-4" aria-hidden="true" />
         <AlertTitle>Error</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
       </Alert>
@@ -270,7 +270,10 @@ export function HealthSummary({ patientId }: HealthSummaryProps) {
         <Card>
           <CardHeader>
             <CardTitle className="font-display text-xl flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-warning" />
+              <AlertTriangle
+                className="h-5 w-5 text-warning"
+                aria-hidden="true"
+              />
               Detected Anomalies
             </CardTitle>
             <CardDescription>
@@ -325,6 +328,7 @@ export function HealthSummary({ patientId }: HealthSummaryProps) {
         >
           <RefreshCw
             className={`mr-2 h-4 w-4 ${isRegenerating ? 'animate-spin' : ''}`}
+            aria-hidden="true"
           />
           {isRegenerating ? 'Generating...' : 'Regenerate Summary'}
         </Button>
@@ -332,7 +336,7 @@ export function HealthSummary({ patientId }: HealthSummaryProps) {
 
       {/* Medical Disclaimer */}
       <Alert>
-        <Info className="h-4 w-4" />
+        <Info className="h-4 w-4" aria-hidden="true" />
         <AlertTitle>Medical Disclaimer</AlertTitle>
         <AlertDescription>
           This AI-generated summary is for informational purposes only and does
@@ -347,7 +351,9 @@ export function HealthSummary({ patientId }: HealthSummaryProps) {
       {summary?.modelUsed && (
         <p className="text-muted-foreground text-center text-xs">
           Generated using {summary.modelUsed} on{' '}
-          {new Date(summary.createdAt).toLocaleDateString()}
+          {new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(
+            new Date(summary.createdAt),
+          )}
         </p>
       )}
     </div>

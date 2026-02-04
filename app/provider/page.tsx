@@ -307,7 +307,7 @@ export default function ProviderPortalPage() {
             </Button>
             <Link href="/">
               <Button variant="ghost">
-                <Home className="mr-2 h-4 w-4" />
+                <Home className="mr-2 h-4 w-4" aria-hidden="true" />
                 Exit Portal
               </Button>
             </Link>
@@ -377,7 +377,10 @@ export default function ProviderPortalPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 text-warning" />
+                      <AlertTriangle
+                        className="h-5 w-5 text-warning"
+                        aria-hidden="true"
+                      />
                       Detected Anomalies
                     </CardTitle>
                   </CardHeader>
@@ -485,7 +488,7 @@ export default function ProviderPortalPage() {
 
         {/* Medical Disclaimer */}
         <Alert>
-          <Info className="h-4 w-4" />
+          <Info className="h-4 w-4" aria-hidden="true" />
           <AlertTitle>Medical Disclaimer</AlertTitle>
           <AlertDescription>{accessData.disclaimer}</AlertDescription>
         </Alert>
@@ -510,11 +513,11 @@ export default function ProviderPortalPage() {
           <Tabs defaultValue="token" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="token" className="flex items-center gap-2">
-                <Key className="h-4 w-4" />
+                <Key className="h-4 w-4" aria-hidden="true" />
                 Token Access
               </TabsTrigger>
               <TabsTrigger value="otp" className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
+                <Mail className="h-4 w-4" aria-hidden="true" />
                 Live OTP
               </TabsTrigger>
             </TabsList>
@@ -526,11 +529,12 @@ export default function ProviderPortalPage() {
                   <Input
                     id="token"
                     type="text"
-                    placeholder="Enter the share token from patient"
+                    placeholder="Enter the share token..."
                     value={token}
                     onChange={(e) => setToken(e.target.value)}
                     disabled={isLoading}
                     required
+                    autoComplete="off"
                   />
                   <p className="text-xs text-muted-foreground">
                     The patient provides this token to share their records
@@ -545,15 +549,24 @@ export default function ProviderPortalPage() {
                   ) : (
                     <select
                       id="tokenOrganization"
-                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex h-9 w-full rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                       value={tokenOrganization}
                       onChange={(e) => setTokenOrganization(e.target.value)}
                       disabled={isLoading}
                       required
                     >
-                      <option value="">Select your organization</option>
+                      <option
+                        value=""
+                        className="bg-background text-foreground"
+                      >
+                        Select your organization
+                      </option>
                       {organizations.map((org) => (
-                        <option key={org.id} value={org.slug}>
+                        <option
+                          key={org.id}
+                          value={org.slug}
+                          className="bg-background text-foreground"
+                        >
                           {org.name}
                         </option>
                       ))}
@@ -573,6 +586,7 @@ export default function ProviderPortalPage() {
                     onChange={(e) => setTokenEmployeeId(e.target.value)}
                     disabled={isLoading}
                     required
+                    autoComplete="off"
                   />
                   <p className="text-xs text-muted-foreground">
                     Your organization&apos;s employee ID for access logging
@@ -592,11 +606,12 @@ export default function ProviderPortalPage() {
                     <Input
                       id="otpPatientId"
                       type="text"
-                      placeholder="Enter patient ID"
+                      placeholder="Enter patient ID..."
                       value={otpPatientId}
                       onChange={(e) => setOtpPatientId(e.target.value)}
                       disabled={isLoading}
                       required
+                      autoComplete="off"
                     />
                     <p className="text-xs text-muted-foreground">
                       The patient&apos;s unique identifier in the system
@@ -611,15 +626,24 @@ export default function ProviderPortalPage() {
                     ) : (
                       <select
                         id="otpOrganization"
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex h-9 w-full rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                         value={otpOrganization}
                         onChange={(e) => setOtpOrganization(e.target.value)}
                         disabled={isLoading}
                         required
                       >
-                        <option value="">Select your organization</option>
+                        <option
+                          value=""
+                          className="bg-background text-foreground"
+                        >
+                          Select your organization
+                        </option>
                         {organizations.map((org) => (
-                          <option key={org.id} value={org.slug}>
+                          <option
+                            key={org.id}
+                            value={org.slug}
+                            className="bg-background text-foreground"
+                          >
                             {org.name}
                           </option>
                         ))}
@@ -639,6 +663,7 @@ export default function ProviderPortalPage() {
                       onChange={(e) => setOtpEmployeeId(e.target.value)}
                       disabled={isLoading}
                       required
+                      autoComplete="off"
                     />
                     <p className="text-xs text-muted-foreground">
                       Your organization&apos;s employee ID
@@ -655,7 +680,7 @@ export default function ProviderPortalPage() {
               ) : (
                 <form onSubmit={handleVerifyOtp} className="space-y-4">
                   <Alert>
-                    <Mail className="h-4 w-4" />
+                    <Mail className="h-4 w-4" aria-hidden="true" />
                     <AlertTitle>Code Sent</AlertTitle>
                     <AlertDescription>
                       Verification code sent to {otpMaskedEmail}
@@ -666,13 +691,14 @@ export default function ProviderPortalPage() {
                     <Input
                       id="otpCode"
                       type="text"
-                      placeholder="Enter 6-digit code"
+                      placeholder="Enter 6-digit code..."
                       value={otpCode}
                       onChange={(e) => setOtpCode(e.target.value)}
                       disabled={isLoading}
                       required
                       maxLength={6}
                       className="text-center text-lg tracking-widest"
+                      autoComplete="one-time-code"
                     />
                     <p className="text-xs text-muted-foreground">
                       Ask the patient to share the code they received

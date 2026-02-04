@@ -150,9 +150,11 @@ export default function PatientDashboardPage() {
   const uniqueHospitals = new Set(records.map((r) => r.hospital)).size
   const lastUpdated =
     records.length > 0
-      ? new Date(
-          Math.max(...records.map((r) => new Date(r.createdAt).getTime())),
-        ).toLocaleDateString()
+      ? new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(
+          new Date(
+            Math.max(...records.map((r) => new Date(r.createdAt).getTime())),
+          ),
+        )
       : 'N/A'
   const recordCategories = new Set(records.map((r) => r.category)).size
 
@@ -219,7 +221,10 @@ export default function PatientDashboardPage() {
   if (!patientId) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="size-8 animate-spin text-primary" />
+        <Loader2
+          className="size-8 animate-spin text-primary"
+          aria-hidden="true"
+        />
       </div>
     )
   }
@@ -241,7 +246,10 @@ export default function PatientDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Records</CardTitle>
-            <FileText className="size-4 text-muted-foreground" />
+            <FileText
+              className="size-4 text-muted-foreground"
+              aria-hidden="true"
+            />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalRecords}</div>
@@ -256,7 +264,10 @@ export default function PatientDashboardPage() {
             <CardTitle className="text-sm font-medium">
               Healthcare Providers
             </CardTitle>
-            <Building2 className="size-4 text-muted-foreground" />
+            <Building2
+              className="size-4 text-muted-foreground"
+              aria-hidden="true"
+            />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{uniqueHospitals}</div>
@@ -267,7 +278,10 @@ export default function PatientDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Record Types</CardTitle>
-            <Activity className="size-4 text-muted-foreground" />
+            <Activity
+              className="size-4 text-muted-foreground"
+              aria-hidden="true"
+            />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{recordCategories}</div>
@@ -280,7 +294,10 @@ export default function PatientDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Last Updated</CardTitle>
-            <Calendar className="size-4 text-muted-foreground" />
+            <Calendar
+              className="size-4 text-muted-foreground"
+              aria-hidden="true"
+            />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{lastUpdated}</div>

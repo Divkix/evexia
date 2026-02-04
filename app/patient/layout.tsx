@@ -111,7 +111,10 @@ export default function PatientDashboardLayout({
             <Skeleton className="h-8 w-24" />
           </header>
           <div className="flex flex-1 items-center justify-center">
-            <Loader2 className="size-8 animate-spin text-primary" />
+            <Loader2
+              className="size-8 animate-spin text-primary"
+              aria-hidden="true"
+            />
           </div>
         </main>
       </div>
@@ -151,7 +154,7 @@ export default function PatientDashboardLayout({
                 asChild
               >
                 <Link href={item.href}>
-                  <Icon className="size-5" />
+                  <Icon className="size-5" aria-hidden="true" />
                   {item.label}
                 </Link>
               </Button>
@@ -167,9 +170,9 @@ export default function PatientDashboardLayout({
               disabled={loggingOut}
             >
               {loggingOut ? (
-                <Loader2 className="size-5 animate-spin" />
+                <Loader2 className="size-5 animate-spin" aria-hidden="true" />
               ) : (
-                <LogOut className="size-5" />
+                <LogOut className="size-5" aria-hidden="true" />
               )}
               {loggingOut ? 'Logging out...' : 'Logout'}
             </Button>

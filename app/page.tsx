@@ -63,7 +63,7 @@ export default function LandingPage() {
             <Button asChild size="lg" className="w-full sm:w-auto">
               <Link href="/patient/login">
                 Patient Login
-                <ArrowRight className="ml-2 size-4" />
+                <ArrowRight className="ml-2 size-4" aria-hidden="true" />
               </Link>
             </Button>
             <Button
@@ -92,7 +92,10 @@ export default function LandingPage() {
               >
                 <CardHeader>
                   <div className="mb-2 flex size-12 items-center justify-center rounded-lg bg-primary/10">
-                    <feature.icon className="size-6 text-primary" />
+                    <feature.icon
+                      className="size-6 text-primary"
+                      aria-hidden="true"
+                    />
                   </div>
                   <CardTitle className="text-lg">{feature.title}</CardTitle>
                 </CardHeader>
@@ -110,7 +113,9 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t px-6 py-8">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
-          <p>&copy; {new Date().getFullYear()} Evexia. All rights reserved.</p>
+          <p suppressHydrationWarning>
+            &copy; {new Date().getFullYear()} Evexia. All rights reserved.
+          </p>
           <nav className="flex gap-6">
             <Link href="/privacy" className="hover:text-foreground">
               Privacy

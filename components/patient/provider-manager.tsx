@@ -253,7 +253,7 @@ export function ProviderManager({ patientId }: ProviderManagerProps) {
       <Card>
         <CardHeader>
           <CardTitle className="font-display text-xl flex items-center gap-2">
-            <UserPlus className="h-5 w-5" />
+            <UserPlus className="h-5 w-5" aria-hidden="true" />
             Healthcare Providers
           </CardTitle>
           <CardDescription>
@@ -317,7 +317,7 @@ export function ProviderManager({ patientId }: ProviderManagerProps) {
                             size="sm"
                             onClick={() => openEditDialog(provider)}
                           >
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className="h-4 w-4" aria-hidden="true" />
                             <span className="sr-only">Edit</span>
                           </Button>
                           <Button
@@ -325,7 +325,10 @@ export function ProviderManager({ patientId }: ProviderManagerProps) {
                             size="sm"
                             onClick={() => openDeleteDialog(provider)}
                           >
-                            <Trash2 className="h-4 w-4 text-destructive" />
+                            <Trash2
+                              className="h-4 w-4 text-destructive"
+                              aria-hidden="true"
+                            />
                             <span className="sr-only">Delete</span>
                           </Button>
                         </div>
@@ -366,7 +369,11 @@ export function ProviderManager({ patientId }: ProviderManagerProps) {
                   <FormItem>
                     <FormLabel>Provider Name *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Dr. Jane Smith" {...field} />
+                      <Input
+                        placeholder="Dr. Jane Smith..."
+                        autoComplete="off"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -380,7 +387,11 @@ export function ProviderManager({ patientId }: ProviderManagerProps) {
                   <FormItem>
                     <FormLabel>Organization</FormLabel>
                     <FormControl>
-                      <Input placeholder="City Hospital" {...field} />
+                      <Input
+                        placeholder="City Hospital..."
+                        autoComplete="organization"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -402,7 +413,8 @@ export function ProviderManager({ patientId }: ProviderManagerProps) {
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder="doctor@hospital.com"
+                        placeholder="doctor@hospital.com..."
+                        autoComplete="email"
                         {...field}
                       />
                     </FormControl>

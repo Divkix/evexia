@@ -170,7 +170,8 @@ export default function PatientLoginPage() {
                 <Input
                   id="fullName"
                   type="text"
-                  placeholder="John Doe"
+                  placeholder="John Doe..."
+                  autoComplete="name"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   disabled={isLoading}
@@ -182,6 +183,7 @@ export default function PatientLoginPage() {
                 <Input
                   id="dateOfBirth"
                   type="date"
+                  autoComplete="bday"
                   value={dateOfBirth}
                   onChange={(e) => setDateOfBirth(e.target.value)}
                   disabled={isLoading}
@@ -213,6 +215,7 @@ export default function PatientLoginPage() {
                   pattern="[0-9]*"
                   maxLength={6}
                   placeholder="000000"
+                  autoComplete="one-time-code"
                   value={otpCode}
                   onChange={(e) => {
                     const value = e.target.value.replace(/\D/g, '')

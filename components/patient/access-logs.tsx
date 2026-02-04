@@ -64,15 +64,10 @@ function maskIpAddress(ip: string | null | undefined): string {
 function formatDateTime(dateString: string): { date: string; time: string } {
   const date = new Date(dateString)
   return {
-    date: date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    }),
-    time: date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-    }),
+    date: new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(
+      date,
+    ),
+    time: new Intl.DateTimeFormat('en-US', { timeStyle: 'short' }).format(date),
   }
 }
 
@@ -132,7 +127,10 @@ function EmptyState() {
       <CardContent className="py-12">
         <div className="flex flex-col items-center justify-center text-center">
           <div className="rounded-full bg-muted p-4 mb-4">
-            <Shield className="h-8 w-8 text-muted-foreground" />
+            <Shield
+              className="h-8 w-8 text-muted-foreground"
+              aria-hidden="true"
+            />
           </div>
           <h3 className="font-medium text-lg mb-2">No Access Logs</h3>
           <p className="text-muted-foreground text-sm max-w-sm">
@@ -198,7 +196,7 @@ export function AccessLogs({ patientId }: AccessLogsProps) {
     <Card>
       <CardHeader>
         <CardTitle className="font-display text-xl flex items-center gap-2">
-          <History className="h-5 w-5" />
+          <History className="h-5 w-5" aria-hidden="true" />
           Access History
         </CardTitle>
         <CardDescription>

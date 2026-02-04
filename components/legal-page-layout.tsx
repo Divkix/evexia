@@ -30,7 +30,10 @@ export function LegalPageLayout({
       <main className="flex-1 px-6 py-12">
         <div className="mx-auto max-w-3xl">
           <Alert className="mb-8 border-amber-500/50 bg-amber-50 text-amber-900 dark:bg-amber-950/50 dark:text-amber-100">
-            <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
+            <AlertTriangle
+              className="size-4 text-amber-600 dark:text-amber-400"
+              aria-hidden="true"
+            />
             <AlertTitle>Hackathon Prototype</AlertTitle>
             <AlertDescription className="text-amber-800 dark:text-amber-200">
               This is a demonstration application built for a hackathon. It is
@@ -54,7 +57,9 @@ export function LegalPageLayout({
 
       <footer className="border-t px-6 py-8">
         <div className="mx-auto flex max-w-3xl flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
-          <p>&copy; {new Date().getFullYear()} Evexia. All rights reserved.</p>
+          <p suppressHydrationWarning>
+            &copy; {new Date().getFullYear()} Evexia. All rights reserved.
+          </p>
           <nav className="flex gap-6">
             <Link href="/privacy" className="hover:text-foreground">
               Privacy Policy

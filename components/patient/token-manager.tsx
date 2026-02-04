@@ -343,7 +343,7 @@ export function TokenManager({ patientId }: TokenManagerProps) {
       <Card>
         <CardHeader>
           <CardTitle className="font-display text-xl flex items-center gap-2">
-            <Key className="h-5 w-5" />
+            <Key className="h-5 w-5" aria-hidden="true" />
             Share Tokens
           </CardTitle>
           <CardDescription>
@@ -399,9 +399,15 @@ export function TokenManager({ patientId }: TokenManagerProps) {
                                 }
                               >
                                 {copiedTokenId === token.id ? (
-                                  <Check className="h-3 w-3 text-green-600" />
+                                  <Check
+                                    className="h-3 w-3 text-green-600"
+                                    aria-hidden="true"
+                                  />
                                 ) : (
-                                  <Copy className="h-3 w-3" />
+                                  <Copy
+                                    className="h-3 w-3"
+                                    aria-hidden="true"
+                                  />
                                 )}
                                 <span className="sr-only">Copy token</span>
                               </Button>
@@ -435,7 +441,10 @@ export function TokenManager({ patientId }: TokenManagerProps) {
                                 size="sm"
                                 onClick={() => openRevokeDialog(token)}
                               >
-                                <ShieldOff className="h-4 w-4" />
+                                <ShieldOff
+                                  className="h-4 w-4"
+                                  aria-hidden="true"
+                                />
                                 <span className="sr-only">Revoke</span>
                               </Button>
                             )}
@@ -444,7 +453,10 @@ export function TokenManager({ patientId }: TokenManagerProps) {
                               size="sm"
                               onClick={() => openDeleteDialog(token)}
                             >
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                              <Trash2
+                                className="h-4 w-4 text-destructive"
+                                aria-hidden="true"
+                              />
                               <span className="sr-only">Delete</span>
                             </Button>
                           </div>

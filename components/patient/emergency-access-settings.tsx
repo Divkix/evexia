@@ -93,7 +93,10 @@ export function EmergencyAccessSettings({
     <Card className="border-amber-500/40">
       <CardHeader>
         <CardTitle className="font-display text-xl flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-amber-500" />
+          <AlertTriangle
+            className="h-5 w-5 text-amber-500"
+            aria-hidden="true"
+          />
           Emergency Access
         </CardTitle>
         <CardDescription>
@@ -102,7 +105,10 @@ export function EmergencyAccessSettings({
       </CardHeader>
       <CardContent className="space-y-6">
         <Alert className="border-amber-500/40 bg-amber-50 dark:bg-amber-950/20">
-          <AlertTriangle className="h-4 w-4 text-amber-500" />
+          <AlertTriangle
+            className="h-4 w-4 text-amber-500"
+            aria-hidden="true"
+          />
           <AlertDescription className="text-amber-800 dark:text-amber-200">
             When enabled, emergency room healthcare providers can access your
             medical records without requiring OTP verification or a share token.
@@ -136,7 +142,10 @@ export function EmergencyAccessSettings({
 
         <div className="rounded-lg bg-muted/50 p-4">
           <div className="flex items-start gap-3">
-            <Info className="h-5 w-5 text-muted-foreground mt-0.5" />
+            <Info
+              className="h-5 w-5 text-muted-foreground mt-0.5"
+              aria-hidden="true"
+            />
             <div className="space-y-2 text-sm text-muted-foreground">
               <p className="font-medium text-foreground">
                 What this means for you:

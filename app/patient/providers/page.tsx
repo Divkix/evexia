@@ -51,7 +51,10 @@ export default function ProvidersPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="size-8 animate-spin text-primary" />
+        <Loader2
+          className="size-8 animate-spin text-primary"
+          aria-hidden="true"
+        />
       </div>
     )
   }
@@ -77,7 +80,10 @@ export default function ProvidersPage() {
   if (!patientId) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="size-8 animate-spin text-primary" />
+        <Loader2
+          className="size-8 animate-spin text-primary"
+          aria-hidden="true"
+        />
       </div>
     )
   }
