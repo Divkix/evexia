@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as OtpRequestBody
 
     if (body.action === 'request-otp') {
-      return handleRequestOtp(body)
+      return handleRequestOtp(request, body)
     }
 
     if (body.action === 'verify-otp') {
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handleRequestOtp(body: RequestOtpBody) {
+async function handleRequestOtp(request: NextRequest, body: RequestOtpBody) {
   const { patientId, employeeId, organizationSlug } = body
 
   if (!patientId || !employeeId || !organizationSlug) {
@@ -119,6 +119,57 @@ async function handleRequestOtp(body: RequestOtpBody) {
 
   // Determine scope based on access type
   const scope = isEmergencyAccess ? FULL_SCOPE : provider!.scope
+
+  // If emergency access, bypass OTP and return data immediately
+  if (isEmergencyAccess) {
+    const ip =
+      request.headers.get('x-forwarded-for') ??
+      request.headers.get('x-real-ip') ??
+      'unknown'
+    const userAgent = request.headers.get('user-agent') ?? undefined
+
+    const [, records, summary] = await Promise.all([
+      logAccess({
+        patientId: patient.id,
+        providerName: employee.name,
+        providerOrg: organization.name,
+        ipAddress: ip,
+        userAgent,
+        accessMethod: 'emergency',
+        scope: FULL_SCOPE,
+        isEmergencyAccess: true,
+      }),
+      getPatientRecords(patient.id, { categories: FULL_SCOPE }),
+      getPatientSummary(patient.id),
+    ])
+
+    const chartData = extractChartData(records)
+
+    return NextResponse.json({
+      success: true,
+      patientName: patient.name,
+      dateOfBirth: patient.dateOfBirth,
+      scope: FULL_SCOPE,
+      records,
+      summary: summary
+        ? {
+            clinicianSummary: summary.clinicianSummary,
+            patientSummary: summary.patientSummary,
+            anomalies: filterAnomaliesByScope(
+              summary.anomalies as Anomaly[] | null,
+              FULL_SCOPE,
+            ),
+            hasFullAccess: true,
+            scopeWarning: null,
+          }
+        : null,
+      chartData,
+      providerName: employee.name,
+      providerOrg: organization.name,
+      isEmergencyAccess: true,
+      disclaimer: MEDICAL_DISCLAIMER,
+    })
+  }
 
   // Send OTP to patient's email via Supabase
   const supabase = await createClient()

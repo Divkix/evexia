@@ -180,13 +180,21 @@ export default function ProviderPortalPage() {
         }),
       })
 
-      const data: OtpRequestResponse = await response.json()
+      const data: OtpRequestResponse | AccessResponse = await response.json()
 
       if (!response.ok) {
         toast.error(data.error || 'Failed to send verification code')
         return
       }
 
+      // Emergency access bypass - got full data without OTP
+      if ('records' in data) {
+        setAccessData(data)
+        toast.success('Emergency access granted')
+        return
+      }
+
+      // Normal flow - transition to OTP input
       setOtpMaskedEmail(data.maskedEmail)
       setOtpStep('verify')
       toast.success('Verification code sent to patient')
