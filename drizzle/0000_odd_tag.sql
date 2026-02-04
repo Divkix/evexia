@@ -11,9 +11,22 @@ CREATE TABLE "access_logs" (
 	"accessed_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "employees" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"employee_id" text NOT NULL,
+	"name" text NOT NULL,
+	"organization" text NOT NULL,
+	"email" text,
+	"department" text,
+	"is_active" boolean DEFAULT true NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "employees_employee_id_unique" UNIQUE("employee_id")
+);
+--> statement-breakpoint
 CREATE TABLE "patient_providers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"patient_id" uuid NOT NULL,
+	"employee_id" uuid,
 	"provider_name" text NOT NULL,
 	"provider_org" text,
 	"provider_email" text,
@@ -69,6 +82,7 @@ CREATE TABLE "summaries" (
 ALTER TABLE "access_logs" ADD CONSTRAINT "access_logs_token_id_share_tokens_id_fk" FOREIGN KEY ("token_id") REFERENCES "public"."share_tokens"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "access_logs" ADD CONSTRAINT "access_logs_patient_id_patients_id_fk" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "patient_providers" ADD CONSTRAINT "patient_providers_patient_id_patients_id_fk" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "patient_providers" ADD CONSTRAINT "patient_providers_employee_id_employees_id_fk" FOREIGN KEY ("employee_id") REFERENCES "public"."employees"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "records" ADD CONSTRAINT "records_patient_id_patients_id_fk" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "share_tokens" ADD CONSTRAINT "share_tokens_patient_id_patients_id_fk" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "summaries" ADD CONSTRAINT "summaries_patient_id_patients_id_fk" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE cascade ON UPDATE no action;

@@ -1,50 +1,47 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { MEDICAL_DISCLAIMER } from '@/lib/ai/prompts'
 import { logAccess } from '@/lib/db/queries/access-logs'
+import { getEmployeeByEmployeeId } from '@/lib/db/queries/employees'
+import { getPatientById, maskEmail } from '@/lib/db/queries/patients'
+import { getProviderByPatientAndEmployeeId } from '@/lib/db/queries/providers'
 import {
-  getPatientById,
-  getPatientByNameAndDob,
-  maskEmail,
-} from '@/lib/db/queries/patients'
-import {
-  getProviderById,
-  getProviderByPatientAndName,
-} from '@/lib/db/queries/providers'
-import type { RecordCategory } from '@/lib/db/queries/records'
-import { getPatientRecords } from '@/lib/db/queries/records'
+  getPatientRecords,
+  type RecordCategory,
+} from '@/lib/db/queries/records'
 import { getPatientSummary } from '@/lib/db/queries/summaries'
 import { createClient } from '@/lib/supabase/server'
 import { extractChartData } from '@/lib/utils/medical'
 
-interface OtpAccessRequestBody {
-  action?: string
-  patientName?: string
-  dateOfBirth?: string
-  providerName?: string
-  providerOrg?: string
-  patientId?: string
-  providerId?: string
-  code?: string
+interface RequestOtpBody {
+  action: 'request-otp'
+  patientId: string
+  employeeId: string
 }
+
+interface VerifyOtpBody {
+  action: 'verify-otp'
+  patientId: string
+  employeeId: string
+  code: string
+}
+
+type OtpRequestBody = RequestOtpBody | VerifyOtpBody
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as OtpAccessRequestBody
-    const { action } = body
+    const body = (await request.json()) as OtpRequestBody
 
-    if (action === 'request-otp') {
-      return handleRequestOtp(request, body)
+    if (body.action === 'request-otp') {
+      return handleRequestOtp(body)
     }
-    if (action === 'verify-otp') {
+
+    if (body.action === 'verify-otp') {
       return handleVerifyOtp(request, body)
     }
 
-    return NextResponse.json(
-      { error: 'Invalid action. Use "request-otp" or "verify-otp"' },
-      { status: 400 },
-    )
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
   } catch (error) {
-    console.error('Provider OTP access error:', error)
+    console.error('OTP access error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 },
@@ -52,41 +49,44 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handleRequestOtp(
-  _request: NextRequest,
-  body: OtpAccessRequestBody,
-) {
-  const { patientName, dateOfBirth, providerName } = body
+async function handleRequestOtp(body: RequestOtpBody) {
+  const { patientId, employeeId } = body
 
-  if (!patientName || !dateOfBirth || !providerName) {
+  if (!patientId || !employeeId) {
     return NextResponse.json(
-      { error: 'Patient name, date of birth, and provider name are required' },
+      { error: 'Patient ID and employee ID are required' },
       { status: 400 },
     )
   }
 
-  // Find patient
-  const patient = await getPatientByNameAndDob(patientName, dateOfBirth)
-  if (!patient) {
-    return NextResponse.json(
-      { error: 'No patient found with that name and date of birth' },
-      { status: 404 },
-    )
+  // Lookup employee
+  const employee = await getEmployeeByEmployeeId(employeeId)
+  if (!employee) {
+    return NextResponse.json({ error: 'Invalid employee ID' }, { status: 403 })
   }
 
-  // Check if provider is authorized
-  const provider = await getProviderByPatientAndName(patient.id, providerName)
+  // Find patient
+  const patient = await getPatientById(patientId)
+  if (!patient) {
+    return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+  }
+
+  // Check if employee is an authorized provider for this patient
+  const provider = await getProviderByPatientAndEmployeeId(
+    patientId,
+    employee.id,
+  )
   if (!provider) {
     return NextResponse.json(
       {
         error:
-          'Provider not authorized for this patient. Patient must add you as a provider first.',
+          'This provider is not authorized to access this patient. The patient must first add the provider to their authorized list.',
       },
       { status: 403 },
     )
   }
 
-  // Send OTP to patient's email
+  // Send OTP to patient's email via Supabase
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithOtp({
     email: patient.email,
@@ -105,42 +105,48 @@ async function handleRequestOtp(
 
   return NextResponse.json({
     success: true,
-    message:
-      'Verification code sent to patient. Ask patient to share the code.',
     maskedEmail: maskEmail(patient.email),
-    patientId: patient.id,
-    providerId: provider.id,
     scope: provider.scope,
+    providerName: employee.name,
+    providerOrg: employee.organization,
   })
 }
 
-async function handleVerifyOtp(
-  request: NextRequest,
-  body: OtpAccessRequestBody,
-) {
-  const { patientId, providerId, code, providerName, providerOrg } = body
+async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
+  const { patientId, employeeId, code } = body
 
-  if (!patientId || !providerId || !code) {
+  if (!patientId || !employeeId || !code) {
     return NextResponse.json(
-      { error: 'Patient ID, provider ID, and verification code are required' },
+      { error: 'Patient ID, employee ID, and verification code are required' },
       { status: 400 },
     )
   }
 
+  // Lookup employee
+  const employee = await getEmployeeByEmployeeId(employeeId)
+  if (!employee) {
+    return NextResponse.json({ error: 'Invalid employee ID' }, { status: 403 })
+  }
+
+  // Find patient
   const patient = await getPatientById(patientId)
   if (!patient) {
     return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
   }
 
-  const provider = await getProviderById(providerId)
-  if (!provider || provider.patientId !== patientId) {
+  // Check provider authorization
+  const provider = await getProviderByPatientAndEmployeeId(
+    patientId,
+    employee.id,
+  )
+  if (!provider) {
     return NextResponse.json(
-      { error: 'Provider not found or not authorized' },
+      { error: 'Provider not authorized for this patient' },
       { status: 403 },
     )
   }
 
-  // Verify OTP
+  // Verify OTP with Supabase
   const supabase = await createClient()
   const { error } = await supabase.auth.verifyOtp({
     email: patient.email,
@@ -164,8 +170,8 @@ async function handleVerifyOtp(
 
   await logAccess({
     patientId: patient.id,
-    providerName,
-    providerOrg,
+    providerName: employee.name,
+    providerOrg: employee.organization,
     ipAddress: ip,
     userAgent,
     accessMethod: 'otp',
@@ -194,6 +200,8 @@ async function handleVerifyOtp(
         }
       : null,
     chartData,
+    providerName: employee.name,
+    providerOrg: employee.organization,
     disclaimer: MEDICAL_DISCLAIMER,
   })
 }

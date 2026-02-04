@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertTriangle, Info, Key, Smartphone } from 'lucide-react'
+import { AlertTriangle, Info, Key, Mail } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { HealthCharts } from '@/components/patient/health-charts'
@@ -62,49 +62,42 @@ interface AccessResponse {
   records: MedicalRecord[]
   summary: Summary | null
   chartData: ChartData
+  providerName: string
+  providerOrg: string
   disclaimer: string
   error?: string
 }
 
 interface OtpRequestResponse {
   success: boolean
-  message: string
   maskedEmail: string
-  patientId: string
-  providerId: string
   scope: string[]
+  providerName: string
+  providerOrg: string
   error?: string
 }
 
 type OtpStep = 'request' | 'verify'
 
 export default function ProviderPortalPage() {
-  const [activeTab, setActiveTab] = useState('token')
   const [isLoading, setIsLoading] = useState(false)
   const [accessData, setAccessData] = useState<AccessResponse | null>(null)
 
-  // Token access state
+  // Token access form state
   const [token, setToken] = useState('')
-  const [tokenPatientName, setTokenPatientName] = useState('')
-  const [tokenDateOfBirth, setTokenDateOfBirth] = useState('')
-  const [tokenProviderName, setTokenProviderName] = useState('')
-  const [tokenProviderOrg, setTokenProviderOrg] = useState('')
+  const [tokenEmployeeId, setTokenEmployeeId] = useState('')
 
-  // OTP access state
-  const [otpStep, setOtpStep] = useState<OtpStep>('request')
-  const [otpPatientName, setOtpPatientName] = useState('')
-  const [otpDateOfBirth, setOtpDateOfBirth] = useState('')
-  const [otpProviderName, setOtpProviderName] = useState('')
-  const [otpProviderOrg, setOtpProviderOrg] = useState('')
-  const [otpCode, setOtpCode] = useState('')
-  const [otpMaskedEmail, setOtpMaskedEmail] = useState('')
+  // OTP access form state
   const [otpPatientId, setOtpPatientId] = useState('')
-  const [otpProviderId, setOtpProviderId] = useState('')
+  const [otpEmployeeId, setOtpEmployeeId] = useState('')
+  const [otpCode, setOtpCode] = useState('')
+  const [otpStep, setOtpStep] = useState<OtpStep>('request')
+  const [otpMaskedEmail, setOtpMaskedEmail] = useState('')
 
-  const handleTokenAccess = async (e: React.FormEvent) => {
+  const handleTokenAccess = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (!token.trim() || !tokenPatientName.trim() || !tokenDateOfBirth) {
+    if (!token.trim() || !tokenEmployeeId.trim()) {
       toast.error('Please fill in all required fields')
       return
     }
@@ -117,10 +110,7 @@ export default function ProviderPortalPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token: token.trim(),
-          patientName: tokenPatientName.trim(),
-          dateOfBirth: tokenDateOfBirth,
-          providerName: tokenProviderName.trim() || undefined,
-          providerOrg: tokenProviderOrg.trim() || undefined,
+          employeeId: tokenEmployeeId.trim(),
         }),
       })
 
@@ -140,10 +130,10 @@ export default function ProviderPortalPage() {
     }
   }
 
-  const handleRequestOtp = async (e: React.FormEvent) => {
+  const handleRequestOtp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (!otpPatientName.trim() || !otpDateOfBirth || !otpProviderName.trim()) {
+    if (!otpPatientId.trim() || !otpEmployeeId.trim()) {
       toast.error('Please fill in all required fields')
       return
     }
@@ -156,22 +146,19 @@ export default function ProviderPortalPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'request-otp',
-          patientName: otpPatientName.trim(),
-          dateOfBirth: otpDateOfBirth,
-          providerName: otpProviderName.trim(),
+          patientId: otpPatientId.trim(),
+          employeeId: otpEmployeeId.trim(),
         }),
       })
 
       const data: OtpRequestResponse = await response.json()
 
       if (!response.ok) {
-        toast.error(data.error || 'Failed to request OTP')
+        toast.error(data.error || 'Failed to send verification code')
         return
       }
 
       setOtpMaskedEmail(data.maskedEmail)
-      setOtpPatientId(data.patientId)
-      setOtpProviderId(data.providerId)
       setOtpStep('verify')
       toast.success('Verification code sent to patient')
     } catch {
@@ -181,11 +168,11 @@ export default function ProviderPortalPage() {
     }
   }
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (!otpCode || otpCode.length !== 6) {
-      toast.error('Please enter the 6-digit verification code')
+    if (!otpCode.trim()) {
+      toast.error('Please enter the verification code')
       return
     }
 
@@ -197,18 +184,16 @@ export default function ProviderPortalPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'verify-otp',
-          patientId: otpPatientId,
-          providerId: otpProviderId,
-          code: otpCode,
-          providerName: otpProviderName.trim(),
-          providerOrg: otpProviderOrg.trim() || undefined,
+          patientId: otpPatientId.trim(),
+          employeeId: otpEmployeeId.trim(),
+          code: otpCode.trim(),
         }),
       })
 
       const data: AccessResponse = await response.json()
 
       if (!response.ok) {
-        toast.error(data.error || 'Invalid verification code')
+        toast.error(data.error || 'Verification failed')
         return
       }
 
@@ -221,30 +206,21 @@ export default function ProviderPortalPage() {
     }
   }
 
-  const handleBackToRequest = () => {
+  const handleOtpBack = () => {
     setOtpStep('request')
     setOtpCode('')
     setOtpMaskedEmail('')
-    setOtpPatientId('')
-    setOtpProviderId('')
   }
 
   const handleNewAccess = () => {
     setAccessData(null)
     setToken('')
-    setTokenPatientName('')
-    setTokenDateOfBirth('')
-    setTokenProviderName('')
-    setTokenProviderOrg('')
-    setOtpStep('request')
-    setOtpPatientName('')
-    setOtpDateOfBirth('')
-    setOtpProviderName('')
-    setOtpProviderOrg('')
-    setOtpCode('')
-    setOtpMaskedEmail('')
+    setTokenEmployeeId('')
     setOtpPatientId('')
-    setOtpProviderId('')
+    setOtpEmployeeId('')
+    setOtpCode('')
+    setOtpStep('request')
+    setOtpMaskedEmail('')
   }
 
   const groupRecordsByCategory = (records: MedicalRecord[]) => {
@@ -314,6 +290,18 @@ export default function ProviderPortalPage() {
                 <p className="font-medium">{accessData.dateOfBirth}</p>
               </div>
             </div>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  Accessing Provider
+                </p>
+                <p className="font-medium">{accessData.providerName}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Organization</p>
+                <p className="font-medium">{accessData.providerOrg}</p>
+              </div>
+            </div>
             <div className="mt-4">
               <p className="mb-2 text-sm text-muted-foreground">Access Scope</p>
               <div className="flex flex-wrap gap-2">
@@ -344,56 +332,57 @@ export default function ProviderPortalPage() {
               </CardContent>
             </Card>
 
-            {accessData.summary.anomalies.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5 text-warning" />
-                    Detected Anomalies
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {accessData.summary.anomalies.map((anomaly, index) => (
-                      <Badge
-                        key={`${anomaly.type}-${index}`}
-                        variant={
-                          anomaly.severity === 'critical' ||
-                          anomaly.severity === 'high'
-                            ? 'destructive'
-                            : 'secondary'
-                        }
-                      >
-                        {anomaly.type}
-                        {anomaly.value && (
-                          <span className="ml-1 opacity-80">
-                            ({anomaly.value})
-                          </span>
-                        )}
-                      </Badge>
-                    ))}
-                  </div>
-                  <ul className="mt-4 space-y-2 text-sm">
-                    {accessData.summary.anomalies.map((anomaly, index) => (
-                      <li
-                        key={`detail-${anomaly.type}-${index}`}
-                        className="flex items-start gap-2"
-                      >
-                        <span
-                          className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
+            {accessData.summary.anomalies &&
+              accessData.summary.anomalies.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-warning" />
+                      Detected Anomalies
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {accessData.summary.anomalies.map((anomaly, index) => (
+                        <Badge
+                          key={`${anomaly.type}-${index}`}
+                          variant={
                             anomaly.severity === 'critical' ||
                             anomaly.severity === 'high'
-                              ? 'bg-destructive'
-                              : 'bg-warning'
-                          }`}
-                        />
-                        <span>{anomaly.message}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            )}
+                              ? 'destructive'
+                              : 'secondary'
+                          }
+                        >
+                          {anomaly.type}
+                          {anomaly.value && (
+                            <span className="ml-1 opacity-80">
+                              ({anomaly.value})
+                            </span>
+                          )}
+                        </Badge>
+                      ))}
+                    </div>
+                    <ul className="mt-4 space-y-2 text-sm">
+                      {accessData.summary.anomalies.map((anomaly, index) => (
+                        <li
+                          key={`detail-${anomaly.type}-${index}`}
+                          className="flex items-start gap-2"
+                        >
+                          <span
+                            className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
+                              anomaly.severity === 'critical' ||
+                              anomaly.severity === 'high'
+                                ? 'bg-destructive'
+                                : 'bg-warning'
+                            }`}
+                          />
+                          <span>{anomaly.message}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
           </div>
         )}
 
@@ -464,94 +453,60 @@ export default function ProviderPortalPage() {
     )
   }
 
-  // Access request forms
+  // Access request form with tabs
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4 py-8">
-      <Card className="w-full max-w-lg">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Provider Portal</CardTitle>
           <CardDescription>
-            Access patient records with a share token or live OTP verification
+            Access patient records using a share token or live OTP verification
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Tabs defaultValue="token" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="token" className="gap-2">
+              <TabsTrigger value="token" className="flex items-center gap-2">
                 <Key className="h-4 w-4" />
                 Token Access
               </TabsTrigger>
-              <TabsTrigger value="otp" className="gap-2">
-                <Smartphone className="h-4 w-4" />
+              <TabsTrigger value="otp" className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
                 Live OTP
               </TabsTrigger>
             </TabsList>
 
-            {/* Token Access Tab */}
-            <TabsContent value="token" className="mt-6">
+            <TabsContent value="token" className="mt-4">
               <form onSubmit={handleTokenAccess} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="token">Share Token *</Label>
+                  <Label htmlFor="token">Share Token</Label>
                   <Input
                     id="token"
                     type="text"
-                    placeholder="Enter the share token"
+                    placeholder="Enter the share token from patient"
                     value={token}
                     onChange={(e) => setToken(e.target.value)}
                     disabled={isLoading}
                     required
                   />
+                  <p className="text-xs text-muted-foreground">
+                    The patient provides this token to share their records
+                  </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="tokenPatientName">Patient Name *</Label>
+                  <Label htmlFor="tokenEmployeeId">Employee ID</Label>
                   <Input
-                    id="tokenPatientName"
+                    id="tokenEmployeeId"
                     type="text"
-                    placeholder="John Doe"
-                    value={tokenPatientName}
-                    onChange={(e) => setTokenPatientName(e.target.value)}
+                    placeholder="e.g., EMP-001"
+                    value={tokenEmployeeId}
+                    onChange={(e) => setTokenEmployeeId(e.target.value)}
                     disabled={isLoading}
                     required
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="tokenDateOfBirth">
-                    Patient Date of Birth *
-                  </Label>
-                  <Input
-                    id="tokenDateOfBirth"
-                    type="date"
-                    value={tokenDateOfBirth}
-                    onChange={(e) => setTokenDateOfBirth(e.target.value)}
-                    disabled={isLoading}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="tokenProviderName">
-                    Your Name (for logging)
-                  </Label>
-                  <Input
-                    id="tokenProviderName"
-                    type="text"
-                    placeholder="Dr. Jane Smith"
-                    value={tokenProviderName}
-                    onChange={(e) => setTokenProviderName(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="tokenProviderOrg">
-                    Organization (for logging)
-                  </Label>
-                  <Input
-                    id="tokenProviderOrg"
-                    type="text"
-                    placeholder="Mayo Clinic"
-                    value={tokenProviderOrg}
-                    onChange={(e) => setTokenProviderOrg(e.target.value)}
-                    disabled={isLoading}
-                  />
+                  <p className="text-xs text-muted-foreground">
+                    Your organization&apos;s employee ID for access logging
+                  </p>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? 'Verifying...' : 'Access Records'}
@@ -559,73 +514,54 @@ export default function ProviderPortalPage() {
               </form>
             </TabsContent>
 
-            {/* OTP Access Tab */}
-            <TabsContent value="otp" className="mt-6">
+            <TabsContent value="otp" className="mt-4">
               {otpStep === 'request' ? (
                 <form onSubmit={handleRequestOtp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="otpPatientName">Patient Name *</Label>
+                    <Label htmlFor="otpPatientId">Patient ID</Label>
                     <Input
-                      id="otpPatientName"
+                      id="otpPatientId"
                       type="text"
-                      placeholder="John Doe"
-                      value={otpPatientName}
-                      onChange={(e) => setOtpPatientName(e.target.value)}
-                      disabled={isLoading}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="otpDateOfBirth">
-                      Patient Date of Birth *
-                    </Label>
-                    <Input
-                      id="otpDateOfBirth"
-                      type="date"
-                      value={otpDateOfBirth}
-                      onChange={(e) => setOtpDateOfBirth(e.target.value)}
-                      disabled={isLoading}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="otpProviderName">Your Name *</Label>
-                    <Input
-                      id="otpProviderName"
-                      type="text"
-                      placeholder="Dr. Jane Smith"
-                      value={otpProviderName}
-                      onChange={(e) => setOtpProviderName(e.target.value)}
+                      placeholder="Enter patient ID"
+                      value={otpPatientId}
+                      onChange={(e) => setOtpPatientId(e.target.value)}
                       disabled={isLoading}
                       required
                     />
                     <p className="text-xs text-muted-foreground">
-                      You must be added as an authorized provider by the patient
+                      The patient&apos;s unique identifier in the system
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="otpProviderOrg">Organization</Label>
+                    <Label htmlFor="otpEmployeeId">Employee ID</Label>
                     <Input
-                      id="otpProviderOrg"
+                      id="otpEmployeeId"
                       type="text"
-                      placeholder="Mayo Clinic"
-                      value={otpProviderOrg}
-                      onChange={(e) => setOtpProviderOrg(e.target.value)}
+                      placeholder="e.g., EMP-001"
+                      value={otpEmployeeId}
+                      onChange={(e) => setOtpEmployeeId(e.target.value)}
                       disabled={isLoading}
+                      required
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Your organization&apos;s employee ID
+                    </p>
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? 'Sending...' : 'Request Verification Code'}
+                    {isLoading ? 'Sending...' : 'Request Verification'}
                   </Button>
+                  <p className="text-center text-xs text-muted-foreground">
+                    A verification code will be sent to the patient&apos;s
+                    email. The patient must share this code with you.
+                  </p>
                 </form>
               ) : (
                 <form onSubmit={handleVerifyOtp} className="space-y-4">
                   <Alert>
-                    <Info className="h-4 w-4" />
+                    <Mail className="h-4 w-4" />
                     <AlertTitle>Code Sent</AlertTitle>
                     <AlertDescription>
-                      A verification code was sent to {otpMaskedEmail}. Ask the
-                      patient to share the 6-digit code with you.
+                      Verification code sent to {otpMaskedEmail}
                     </AlertDescription>
                   </Alert>
                   <div className="space-y-2">
@@ -633,32 +569,36 @@ export default function ProviderPortalPage() {
                     <Input
                       id="otpCode"
                       type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      maxLength={6}
-                      placeholder="000000"
+                      placeholder="Enter 6-digit code"
                       value={otpCode}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '')
-                        setOtpCode(value)
-                      }}
+                      onChange={(e) => setOtpCode(e.target.value)}
                       disabled={isLoading}
                       required
+                      maxLength={6}
                       className="text-center text-lg tracking-widest"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Ask the patient to share the code they received
+                    </p>
                   </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? 'Verifying...' : 'Verify and Access Records'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full"
-                    onClick={handleBackToRequest}
-                    disabled={isLoading}
-                  >
-                    Back
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={handleOtpBack}
+                      disabled={isLoading}
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="flex-1"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 'Verifying...' : 'Verify & Access'}
+                    </Button>
+                  </div>
                 </form>
               )}
             </TabsContent>

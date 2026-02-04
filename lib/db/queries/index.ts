@@ -1,4 +1,5 @@
 export * from './access-logs'
+export * from './employees'
 export * from './patients'
 export * from './providers'
 export * from './records'

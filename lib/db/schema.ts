@@ -1,4 +1,5 @@
 import {
+  boolean,
   date,
   jsonb,
   pgTable,
@@ -48,6 +49,9 @@ export const patientProviders = pgTable('patient_providers', {
   patientId: uuid('patient_id')
     .notNull()
     .references(() => patients.id, { onDelete: 'cascade' }),
+  employeeId: uuid('employee_id').references(() => employees.id, {
+    onDelete: 'set null',
+  }),
   providerName: text('provider_name').notNull(),
   providerOrg: text('provider_org'),
   providerEmail: text('provider_email'),
@@ -80,9 +84,20 @@ export const accessLogs = pgTable('access_logs', {
   providerOrg: text('provider_org'),
   ipAddress: text('ip_address'),
   userAgent: text('user_agent'),
-  accessMethod: text('access_method'), // 'otp' or 'token'
+  accessMethod: text('access_method'), // 'employee_id' or 'token'
   scope: text('scope').array(),
   accessedAt: timestamp('accessed_at').defaultNow().notNull(),
+})
+
+export const employees = pgTable('employees', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  employeeId: text('employee_id').notNull().unique(), // e.g., "EMP-001"
+  name: text('name').notNull(),
+  organization: text('organization').notNull(),
+  email: text('email'),
+  department: text('department'),
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
 // Type exports
@@ -98,3 +113,5 @@ export type ShareToken = typeof shareTokens.$inferSelect
 export type NewShareToken = typeof shareTokens.$inferInsert
 export type AccessLog = typeof accessLogs.$inferSelect
 export type NewAccessLog = typeof accessLogs.$inferInsert
+export type Employee = typeof employees.$inferSelect
+export type NewEmployee = typeof employees.$inferInsert

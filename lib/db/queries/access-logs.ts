@@ -9,7 +9,7 @@ export interface LogAccessData {
   providerOrg?: string
   ipAddress?: string
   userAgent?: string
-  accessMethod: 'otp' | 'token'
+  accessMethod: 'employee_id' | 'token' | 'otp'
   scope: string[]
 }
 

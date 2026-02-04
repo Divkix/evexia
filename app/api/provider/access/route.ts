@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { MEDICAL_DISCLAIMER } from '@/lib/ai/prompts'
 import { logAccess } from '@/lib/db/queries/access-logs'
+import { getEmployeeByEmployeeId } from '@/lib/db/queries/employees'
 import { getPatientById } from '@/lib/db/queries/patients'
 import type { RecordCategory } from '@/lib/db/queries/records'
 import { getPatientRecords } from '@/lib/db/queries/records'
@@ -9,21 +10,18 @@ import { getValidShareToken } from '@/lib/db/queries/tokens'
 import { extractChartData } from '@/lib/utils/medical'
 
 interface AccessRequestBody {
-  token?: string
-  patientName?: string
-  dateOfBirth?: string
-  providerName?: string
-  providerOrg?: string
+  token: string
+  employeeId: string
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as AccessRequestBody
-    const { token, patientName, dateOfBirth, providerName, providerOrg } = body
+    const { token, employeeId } = body
 
-    if (!token || !patientName || !dateOfBirth) {
+    if (!token || !employeeId) {
       return NextResponse.json(
-        { error: 'Token, patient name, and date of birth are required' },
+        { error: 'Token and employee ID are required' },
         { status: 400 },
       )
     }
@@ -37,31 +35,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify patient identity
+    // Lookup employee by employeeId
+    const employee = await getEmployeeByEmployeeId(employeeId)
+    if (!employee) {
+      return NextResponse.json(
+        { error: 'Invalid employee ID' },
+        { status: 403 },
+      )
+    }
+
+    // Get patient from token
     const patient = await getPatientById(shareToken.patientId)
     if (!patient) {
       return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
-    // Check name and DOB match
-    const normalizedName = patientName.trim().toLowerCase()
-    const storedName = patient.name.trim().toLowerCase()
-
-    if (normalizedName !== storedName) {
-      return NextResponse.json(
-        { error: 'Patient name does not match' },
-        { status: 403 },
-      )
-    }
-
-    if (patient.dateOfBirth !== dateOfBirth) {
-      return NextResponse.json(
-        { error: 'Date of birth does not match' },
-        { status: 403 },
-      )
-    }
-
-    // Log access (this is the bug fix - actually commits to DB)
+    // Log access with employee info
     const ip =
       request.headers.get('x-forwarded-for') ??
       request.headers.get('x-real-ip') ??
@@ -71,11 +60,11 @@ export async function POST(request: NextRequest) {
     await logAccess({
       tokenId: shareToken.id,
       patientId: patient.id,
-      providerName,
-      providerOrg,
+      providerName: employee.name,
+      providerOrg: employee.organization,
       ipAddress: ip,
       userAgent,
-      accessMethod: 'token',
+      accessMethod: 'employee_id',
       scope: shareToken.scope,
     })
 
@@ -101,6 +90,8 @@ export async function POST(request: NextRequest) {
           }
         : null,
       chartData,
+      providerName: employee.name,
+      providerOrg: employee.organization,
       disclaimer: MEDICAL_DISCLAIMER,
     })
   } catch (error) {

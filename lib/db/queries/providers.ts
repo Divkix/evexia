@@ -70,3 +70,21 @@ export async function getProviderByPatientAndName(
 
   return result[0] ?? null
 }
+
+export async function getProviderByPatientAndEmployeeId(
+  patientId: string,
+  employeeId: string,
+): Promise<PatientProvider | null> {
+  const result = await db
+    .select()
+    .from(patientProviders)
+    .where(
+      and(
+        eq(patientProviders.patientId, patientId),
+        eq(patientProviders.employeeId, employeeId),
+      ),
+    )
+    .limit(1)
+
+  return result[0] ?? null
+}

@@ -1,6 +1,11 @@
 import { eq } from 'drizzle-orm'
 import { db } from '../lib/db'
-import { patientProviders, patients, records } from '../lib/db/schema'
+import {
+  employees,
+  patientProviders,
+  patients,
+  records,
+} from '../lib/db/schema'
 
 const DEMO_PATIENT = {
   name: 'Maria Santos',
@@ -8,6 +13,30 @@ const DEMO_PATIENT = {
   dateOfBirth: '1985-03-15',
   phone: '555-123-4567',
 }
+
+const DEMO_EMPLOYEES = [
+  {
+    employeeId: 'EMP-001',
+    name: 'Dr. Sarah Chen',
+    organization: 'Banner Health',
+    email: 'sarah.chen@bannerhealth.example',
+    department: 'Primary Care',
+  },
+  {
+    employeeId: 'EMP-002',
+    name: 'Dr. Michael Rivera',
+    organization: 'Mayo Clinic',
+    email: 'michael.rivera@mayoclinic.example',
+    department: 'Cardiology',
+  },
+  {
+    employeeId: 'EMP-003',
+    name: 'Dr. Emily Watson',
+    organization: 'Phoenician Medical Center',
+    email: 'emily.watson@phoenicianmed.example',
+    department: 'Endocrinology',
+  },
+]
 
 async function seed() {
   console.log('Starting seed...')
@@ -215,19 +244,45 @@ async function seed() {
   await db.insert(records).values(recordsToInsert)
   console.log(`Inserted ${recordsToInsert.length} records`)
 
-  // Create sample provider for testing OTP access
+  // Seed demo employees first (needed for linking providers)
+  console.log('Seeding demo employees...')
+  const employeeIds: Record<string, string> = {}
+  for (const emp of DEMO_EMPLOYEES) {
+    const existing = await db
+      .select()
+      .from(employees)
+      .where(eq(employees.employeeId, emp.employeeId))
+      .limit(1)
+
+    if (existing.length === 0) {
+      const [inserted] = await db.insert(employees).values(emp).returning()
+      employeeIds[emp.employeeId] = inserted.id
+      console.log(`Created employee: ${emp.employeeId} - ${emp.name}`)
+    } else {
+      await db
+        .update(employees)
+        .set(emp)
+        .where(eq(employees.employeeId, emp.employeeId))
+      employeeIds[emp.employeeId] = existing[0].id
+      console.log(`Updated employee: ${emp.employeeId} - ${emp.name}`)
+    }
+  }
+  console.log('Demo employees seeded')
+
+  // Create sample provider for testing OTP access (linked to Dr. Sarah Chen employee)
   await db
     .delete(patientProviders)
     .where(eq(patientProviders.patientId, patientId))
 
   await db.insert(patientProviders).values({
     patientId,
+    employeeId: employeeIds['EMP-001'], // Link to Dr. Sarah Chen employee record
     providerName: 'Dr. Sarah Chen',
     providerOrg: 'Banner Health',
     providerEmail: 'sarah.chen@bannerhealth.example',
     scope: ['vitals', 'labs', 'meds', 'encounters'],
   })
-  console.log('Created sample provider')
+  console.log('Created sample provider (linked to EMP-001)')
 
   console.log('Seed complete!')
   console.log('')
