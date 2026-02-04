@@ -166,7 +166,7 @@ export function ConsentExplainerModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="!max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -180,9 +180,9 @@ export function ConsentExplainerModal({
 
         <div className="grid gap-6 py-4">
           {/* Selection and Preview Grid */}
-          <div className="grid gap-6 md:grid-cols-[280px_auto_1fr]">
+          <div className="flex flex-col lg:flex-row gap-6">
             {/* Left Column: Record Type Selection */}
-            <div className="space-y-4">
+            <div className="space-y-4 lg:w-[300px] flex-shrink-0">
               <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
                 Select Records to Share
               </h3>
@@ -239,7 +239,7 @@ export function ConsentExplainerModal({
             </div>
 
             {/* Arrow */}
-            <div className="hidden md:flex items-center justify-center">
+            <div className="hidden lg:flex items-center justify-center flex-shrink-0">
               <ArrowRight
                 className="h-6 w-6 text-muted-foreground"
                 aria-hidden="true"
@@ -247,7 +247,7 @@ export function ConsentExplainerModal({
             </div>
 
             {/* Right Column: What They'll See and Infer */}
-            <div className="space-y-4">
+            <div className="space-y-4 flex-1 min-w-0">
               {selectedTypes.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-muted-foreground text-sm text-center p-8 border border-dashed rounded-lg">
                   Select record types to see what providers can access and infer
