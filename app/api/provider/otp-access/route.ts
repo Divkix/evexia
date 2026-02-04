@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { MEDICAL_DISCLAIMER } from '@/lib/ai/prompts'
+import { isDemoCode, isDemoPatient } from '@/lib/demo'
 import { logAccess } from '@/lib/supabase/queries/access-logs'
 import { getEmployeeByEmployeeIdAndOrg } from '@/lib/supabase/queries/employees'
 import { getOrganizationBySlug } from '@/lib/supabase/queries/organizations'
@@ -117,12 +118,20 @@ async function handleRequestOtp(body: RequestOtpBody) {
     },
   })
 
+  // For demo patients: don't fail on rate limit errors
   if (error) {
-    console.error('Failed to send OTP:', error)
-    return NextResponse.json(
-      { error: 'Failed to send verification code to patient' },
-      { status: 500 },
-    )
+    if (isDemoPatient(patient.email)) {
+      console.warn(
+        'Demo patient OTP send failed (rate limit?), fallback active:',
+        error.message,
+      )
+    } else {
+      console.error('Failed to send OTP:', error)
+      return NextResponse.json(
+        { error: 'Failed to send verification code to patient' },
+        { status: 500 },
+      )
+    }
   }
 
   return NextResponse.json({
@@ -183,6 +192,62 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
       { error: 'Provider not authorized for this patient' },
       { status: 403 },
     )
+  }
+
+  // Demo code bypass for demo patients
+  if (isDemoCode(code) && isDemoPatient(patient.email)) {
+    // Skip Supabase verification, continue with access logging and data retrieval
+    // Extract request metadata for logging
+    const ip =
+      request.headers.get('x-forwarded-for') ??
+      request.headers.get('x-real-ip') ??
+      'unknown'
+    const userAgent = request.headers.get('user-agent') ?? undefined
+
+    // Batch 2: Log access, fetch records, and fetch summary in parallel
+    const [, records, summary] = await Promise.all([
+      logAccess({
+        patientId: patient.id,
+        providerName: employee.name,
+        providerOrg: organization.name,
+        ipAddress: ip,
+        userAgent,
+        accessMethod: 'otp',
+        scope: provider.scope,
+      }),
+      getPatientRecords(patient.id, {
+        categories: provider.scope as RecordCategory[],
+      }),
+      getPatientSummary(patient.id),
+    ])
+
+    const chartData = extractChartData(records)
+
+    return NextResponse.json({
+      success: true,
+      patientName: patient.name,
+      dateOfBirth: patient.dateOfBirth,
+      scope: provider.scope,
+      records,
+      summary: summary
+        ? {
+            clinicianSummary: summary.clinicianSummary,
+            patientSummary: summary.patientSummary,
+            anomalies: filterAnomaliesByScope(
+              summary.anomalies as Anomaly[] | null,
+              provider.scope,
+            ),
+            hasFullAccess: hasFullAccess(provider.scope),
+            scopeWarning: hasFullAccess(provider.scope)
+              ? null
+              : 'This summary may reference data outside your authorized scope.',
+          }
+        : null,
+      chartData,
+      providerName: employee.name,
+      providerOrg: organization.name,
+      disclaimer: MEDICAL_DISCLAIMER,
+    })
   }
 
   // Verify OTP with Supabase (depends on patient.email)

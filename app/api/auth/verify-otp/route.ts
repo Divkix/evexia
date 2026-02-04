@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
+import { isDemoCode, isDemoPatient } from '@/lib/demo'
 import { getPatientById, updatePatient } from '@/lib/supabase/queries/patients'
 import { createClient } from '@/lib/supabase/server'
 
@@ -18,6 +19,21 @@ export async function POST(request: NextRequest) {
 
     if (!patient) {
       return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+    }
+
+    // Demo code bypass for demo patients
+    if (isDemoCode(code) && isDemoPatient(patient.email)) {
+      const response = NextResponse.json({
+        success: true,
+        patientId: patient.id,
+      })
+      response.cookies.set('demo_patient_id', patient.id, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 2, // 2 hours - enough for demo
+      })
+      return response
     }
 
     const supabase = await createClient()

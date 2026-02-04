@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
+import { isDemoPatient } from '@/lib/demo'
 import {
   getPatientByNameAndDob,
   maskEmail,
@@ -25,6 +26,29 @@ export async function POST(request: NextRequest) {
         { error: 'No patient found with that name and date of birth' },
         { status: 404 },
       )
+    }
+
+    // For demo patients: try to send real OTP, but don't fail on rate limit errors
+    if (isDemoPatient(patient.email)) {
+      const supabase = await createClient()
+      const { error } = await supabase.auth.signInWithOtp({
+        email: patient.email,
+        options: {
+          shouldCreateUser: true,
+        },
+      })
+      if (error) {
+        console.warn(
+          'Demo patient OTP send failed (rate limit?), fallback active:',
+          error.message,
+        )
+      }
+      // Always return success for demo patients
+      return NextResponse.json({
+        success: true,
+        maskedEmail: maskEmail(patient.email),
+        patientId: patient.id,
+      })
     }
 
     // Send OTP via Supabase

@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
+import { isDemoPatient } from '@/lib/demo'
 import { env } from '@/lib/env'
 import {
   getPatientByEmail,
@@ -9,7 +10,7 @@ import { createClient } from '@/lib/supabase/server'
 // Demo patient ID for bypass mode - will be set by seed script
 const DEMO_PATIENT_ID = process.env.DEMO_PATIENT_ID
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     // SECURITY: Auth bypass is ONLY allowed in development
     // Explicit NODE_ENV check as defense-in-depth against env.dev.bypassAuth() bugs
@@ -25,6 +26,23 @@ export async function GET() {
             email: patient.email,
           },
           bypass: true,
+        })
+      }
+    }
+
+    // Demo session cookie check (for demo patients using 12345678 code)
+    const demoPatientId = request.cookies.get('demo_patient_id')?.value
+    if (demoPatientId) {
+      const patient = await getPatientById(demoPatientId)
+      if (patient && isDemoPatient(patient.email)) {
+        return NextResponse.json({
+          authenticated: true,
+          patient: {
+            id: patient.id,
+            name: patient.name,
+            email: patient.email,
+          },
+          demoMode: true,
         })
       }
     }
