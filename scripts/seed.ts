@@ -380,7 +380,9 @@ async function seed() {
     ]
 
     await db.insert(records).values(recordsToInsert)
-    console.log(`Inserted ${recordsToInsert.length} records for ${demoPatient.name}`)
+    console.log(
+      `Inserted ${recordsToInsert.length} records for ${demoPatient.name}`,
+    )
 
     // Create sample provider relationship for testing OTP access
     await db
@@ -403,7 +405,9 @@ async function seed() {
   DEMO_PATIENTS.forEach((p, i) => {
     console.log(`  ${p.name} (${p.email}): ${patientIds[i]}`)
   })
-  console.log('\nFor auth bypass in .env.local, use any of the patient IDs above.')
+  console.log(
+    '\nFor auth bypass in .env.local, use any of the patient IDs above.',
+  )
 
   process.exit(0)
 }
