@@ -2,7 +2,6 @@
 
 import { Check, Copy, Key, Plus, ShieldOff, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -13,7 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -22,21 +20,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
@@ -46,17 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-
-const SCOPE_OPTIONS = ['Vitals', 'Labs', 'Medications', 'Encounters'] as const
-
-const EXPIRY_OPTIONS = [
-  { value: '1', label: '1 hour' },
-  { value: '6', label: '6 hours' },
-  { value: '24', label: '24 hours' },
-  { value: '72', label: '3 days' },
-  { value: '168', label: '7 days' },
-  { value: '720', label: '30 days' },
-] as const
+import { ConsentExplainerModal } from './consent-explainer-modal'
 
 interface ShareToken {
   id: string
@@ -66,11 +39,6 @@ interface ShareToken {
   expiresAt: string
   revokedAt: string | null
   createdAt: string
-}
-
-interface TokenFormValues {
-  scope: string[]
-  expiryHours: string
 }
 
 interface TokenManagerProps {
@@ -177,20 +145,14 @@ function TokenManagerSkeleton() {
 export function TokenManager({ patientId }: TokenManagerProps) {
   const [tokens, setTokens] = useState<ShareToken[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [showConsentModal, setShowConsentModal] = useState(false)
+  const [isTokenDisplayOpen, setIsTokenDisplayOpen] = useState(false)
   const [isRevokeDialogOpen, setIsRevokeDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedToken, setSelectedToken] = useState<ShareToken | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [newTokenValue, setNewTokenValue] = useState<string | null>(null)
   const [copiedTokenId, setCopiedTokenId] = useState<string | null>(null)
-
-  const form = useForm<TokenFormValues>({
-    defaultValues: {
-      scope: [],
-      expiryHours: '24',
-    },
-  })
 
   const fetchTokens = useCallback(async () => {
     try {
@@ -212,13 +174,8 @@ export function TokenManager({ patientId }: TokenManagerProps) {
     fetchTokens()
   }, [fetchTokens])
 
-  const openCreateDialog = () => {
-    setNewTokenValue(null)
-    form.reset({
-      scope: [],
-      expiryHours: '24',
-    })
-    setIsDialogOpen(true)
+  const openConsentModal = () => {
+    setShowConsentModal(true)
   }
 
   const openRevokeDialog = (token: ShareToken) => {
@@ -231,8 +188,11 @@ export function TokenManager({ patientId }: TokenManagerProps) {
     setIsDeleteDialogOpen(true)
   }
 
-  const handleCreate = async (values: TokenFormValues) => {
-    if (values.scope.length === 0) {
+  const handleCreateFromConsent = async (
+    selectedTypes: string[],
+    expiryHours: number,
+  ) => {
+    if (selectedTypes.length === 0) {
       toast.error('Please select at least one scope')
       return
     }
@@ -243,8 +203,8 @@ export function TokenManager({ patientId }: TokenManagerProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          scope: values.scope,
-          expiryHours: Number.parseInt(values.expiryHours, 10),
+          scope: selectedTypes,
+          expiryHours,
         }),
       })
 
@@ -255,6 +215,8 @@ export function TokenManager({ patientId }: TokenManagerProps) {
 
       const data = await response.json()
       setNewTokenValue(data.token)
+      setShowConsentModal(false)
+      setIsTokenDisplayOpen(true)
       toast.success('Token created successfully')
       fetchTokens()
     } catch (error) {
@@ -352,7 +314,7 @@ export function TokenManager({ patientId }: TokenManagerProps) {
         <CardContent>
           <div className="space-y-4">
             <div className="flex justify-end">
-              <Button onClick={openCreateDialog}>
+              <Button onClick={openConsentModal}>
                 <Plus className="mr-2 h-4 w-4" />
                 Create Token
               </Button>
@@ -470,127 +432,47 @@ export function TokenManager({ patientId }: TokenManagerProps) {
         </CardContent>
       </Card>
 
-      {/* Create Token Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      {/* Consent Explainer Modal */}
+      <ConsentExplainerModal
+        isOpen={showConsentModal}
+        onClose={() => setShowConsentModal(false)}
+        onConfirm={handleCreateFromConsent}
+        patientId={patientId}
+        isCreating={isSubmitting}
+      />
+
+      {/* Token Display Dialog (shown after creation) */}
+      <Dialog open={isTokenDisplayOpen} onOpenChange={setIsTokenDisplayOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {newTokenValue ? 'Token Created' : 'Create Share Token'}
-            </DialogTitle>
+            <DialogTitle>Token Created</DialogTitle>
             <DialogDescription>
-              {newTokenValue
-                ? 'Copy this token and share it securely. It will not be shown again.'
-                : 'Generate a temporary token to share your health records.'}
+              Copy this token and share it securely. It will not be shown again.
             </DialogDescription>
           </DialogHeader>
-
-          {newTokenValue ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
-                <code className="flex-1 text-sm font-mono break-all">
-                  {newTokenValue}
-                </code>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copyToClipboard(newTokenValue, 'new')}
-                >
-                  {copiedTokenId === 'new' ? (
-                    <Check className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-              <DialogFooter>
-                <Button onClick={() => setIsDialogOpen(false)}>Done</Button>
-              </DialogFooter>
-            </div>
-          ) : (
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(handleCreate)}
-                className="space-y-4"
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
+              <code className="flex-1 text-sm font-mono break-all">
+                {newTokenValue}
+              </code>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  newTokenValue && copyToClipboard(newTokenValue, 'new')
+                }
               >
-                <FormField
-                  control={form.control}
-                  name="scope"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Access Scope *</FormLabel>
-                      <div className="grid grid-cols-2 gap-3 mt-2">
-                        {SCOPE_OPTIONS.map((scope) => (
-                          <div
-                            key={scope}
-                            className="flex items-center space-x-2"
-                          >
-                            <Checkbox
-                              id={`token-scope-${scope}`}
-                              checked={field.value.includes(scope)}
-                              onCheckedChange={(checked) => {
-                                const newScope = checked
-                                  ? [...field.value, scope]
-                                  : field.value.filter((s) => s !== scope)
-                                field.onChange(newScope)
-                              }}
-                            />
-                            <label
-                              htmlFor={`token-scope-${scope}`}
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                            >
-                              {scope}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="expiryHours"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Token Expiry</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select expiry duration" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {EXPIRY_OPTIONS.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? 'Creating...' : 'Create Token'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          )}
+                {copiedTokenId === 'new' ? (
+                  <Check className="h-4 w-4 text-green-600" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setIsTokenDisplayOpen(false)}>Done</Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 

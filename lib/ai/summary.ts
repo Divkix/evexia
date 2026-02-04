@@ -2,7 +2,11 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { generateText } from 'ai'
 import { env } from '@/lib/env'
 import type { Record } from '@/lib/supabase/queries/records'
-import type { SummaryData } from '@/lib/supabase/queries/summaries'
+import type {
+  EquityConcern,
+  Prediction,
+  SummaryData,
+} from '@/lib/supabase/queries/summaries'
 import { generateMockSummary } from './mock'
 import { buildMedicalPrompt } from './prompts'
 
@@ -40,14 +44,21 @@ export async function generateSummary(
   }
 
   try {
-    const openrouter = createOpenRouter({ apiKey })
+    const openrouter = createOpenRouter({
+      apiKey,
+      extraBody: {
+        provider: {
+          sort: 'throughput',
+        },
+      },
+    })
     const model = env.ai.model()
 
     const { text } = await generateText({
       model: openrouter(model),
       prompt: buildMedicalPrompt(records),
       temperature: 0.3,
-      maxOutputTokens: 2000,
+      maxOutputTokens: 3000,
     })
 
     const parsed = extractJsonFromResponse(text)
@@ -67,6 +78,12 @@ export async function generateSummary(
         anomalies: Array.isArray(parsed.anomalies)
           ? (parsed.anomalies as SummaryData['anomalies'])
           : [],
+        equityConcerns: Array.isArray(parsed.equity_concerns)
+          ? transformEquityConcerns(parsed.equity_concerns as AIEquityConcern[])
+          : [],
+        predictions: Array.isArray(parsed.predictions)
+          ? transformPredictions(parsed.predictions as AIPrediction[])
+          : [],
         modelUsed: model,
       },
       usedFallback: false,
@@ -81,10 +98,80 @@ export async function generateSummary(
   }
 }
 
+interface AIEquityConcern {
+  metric?: string
+  patient_value?: string
+  population_average?: string
+  gap_percentage?: number
+  suggested_action?: string
+}
+
+interface AIPrediction {
+  condition?: string
+  current_risk?: string
+  probability?: number
+  timeframe?: string
+  trend_direction?: string
+  actionable_steps?: string[]
+  evidence_basis?: string
+}
+
+/**
+ * Transform AI response equity concerns from snake_case to camelCase
+ */
+function transformEquityConcerns(concerns: AIEquityConcern[]): EquityConcern[] {
+  return concerns.map((c) => ({
+    metric: c.metric ?? '',
+    patientValue: c.patient_value ?? '',
+    populationAverage: c.population_average ?? '',
+    gapPercentage: c.gap_percentage ?? 0,
+    suggestedAction: c.suggested_action ?? '',
+  }))
+}
+
+/**
+ * Transform AI response predictions from snake_case to camelCase
+ */
+function transformPredictions(predictions: AIPrediction[]): Prediction[] {
+  return predictions.map((p) => ({
+    condition: p.condition ?? '',
+    currentRisk: validateRiskLevel(p.current_risk),
+    probability: p.probability ?? 0,
+    timeframe: p.timeframe ?? '',
+    trendDirection: validateTrendDirection(p.trend_direction),
+    actionableSteps: Array.isArray(p.actionable_steps)
+      ? p.actionable_steps
+      : [],
+    evidenceBasis: p.evidence_basis ?? '',
+  }))
+}
+
+function validateRiskLevel(
+  risk?: string,
+): 'low' | 'moderate' | 'high' | 'critical' {
+  const validRisks = ['low', 'moderate', 'high', 'critical'] as const
+  if (risk && validRisks.includes(risk as (typeof validRisks)[number])) {
+    return risk as (typeof validRisks)[number]
+  }
+  return 'moderate'
+}
+
+function validateTrendDirection(
+  trend?: string,
+): 'improving' | 'stable' | 'worsening' {
+  const validTrends = ['improving', 'stable', 'worsening'] as const
+  if (trend && validTrends.includes(trend as (typeof validTrends)[number])) {
+    return trend as (typeof validTrends)[number]
+  }
+  return 'stable'
+}
+
 interface AIResponseJson {
   clinician_summary?: string
   patient_summary?: string
   anomalies?: unknown[]
+  equity_concerns?: unknown[]
+  predictions?: unknown[]
   [key: string]: unknown
 }
 

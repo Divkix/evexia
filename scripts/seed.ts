@@ -440,6 +440,64 @@ Continue current medication regimen and lifestyle interventions.`,
           threshold: '5.7%',
         },
       ],
+      equityConcerns: [
+        {
+          metric: 'A1C',
+          patientValue: '5.9%',
+          populationAverage: '5.4%',
+          gapPercentage: 9,
+          suggestedAction:
+            'Continue lifestyle modifications; A1C approaching normal range',
+        },
+        {
+          metric: 'BMI',
+          patientValue: '25.5',
+          populationAverage: '24.9',
+          gapPercentage: 2,
+          suggestedAction:
+            'Weight trending down; maintain current diet and exercise routine',
+        },
+        {
+          metric: 'LDL Cholesterol',
+          patientValue: '118 mg/dL',
+          populationAverage: '100 mg/dL',
+          gapPercentage: 18,
+          suggestedAction:
+            'Statin therapy effective; consider dietary omega-3 supplementation',
+        },
+      ],
+      predictions: [
+        {
+          condition: 'Type 2 Diabetes',
+          currentRisk: 'moderate',
+          probability: 0.35,
+          timeframe: '24 months',
+          trendDirection: 'improving',
+          actionableSteps: [
+            'Continue metformin as prescribed',
+            'Maintain 30 min daily walking routine',
+            'Reduce refined carbohydrate intake',
+            'Schedule quarterly A1C monitoring',
+          ],
+          evidenceBasis:
+            'Based on CDC diabetes progression models and current trajectory showing 0.3% A1C improvement over 9 months',
+        },
+        {
+          condition: 'Cardiovascular Disease',
+          currentRisk: 'low',
+          probability: 0.15,
+          timeframe: '36 months',
+          trendDirection: 'improving',
+          actionableSteps: [
+            'Continue statin therapy',
+            'Maintain blood pressure control with Lisinopril',
+            'Add 20 min cardio exercise 3x weekly',
+            'Annual lipid panel monitoring',
+          ],
+          evidenceBasis:
+            'Based on Framingham Risk Score calculation and improving lipid panel trends',
+        },
+      ],
       modelUsed: 'demo-seeded',
     })
     console.log(`Seeded AI summary for ${demoPatient.name}`)

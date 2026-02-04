@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertTriangle, Info, RefreshCw } from 'lucide-react'
+import { AlertTriangle, Info, RefreshCw, Scale } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 
 type AnomalySeverity = 'warning' | 'high' | 'critical'
@@ -25,11 +26,31 @@ interface Anomaly {
   threshold?: string | number
 }
 
+interface EquityConcern {
+  metric: string
+  patientValue: string | number
+  populationAverage: string | number
+  gapPercentage: number
+  suggestedAction: string
+}
+
+export interface Prediction {
+  condition: string
+  currentRisk: 'low' | 'moderate' | 'high' | 'critical'
+  probability: number
+  timeframe: string
+  trendDirection: 'improving' | 'stable' | 'worsening'
+  actionableSteps: string[]
+  evidenceBasis: string
+}
+
 interface HealthSummaryData {
   id: string
   clinicianSummary: string
   patientSummary: string
   anomalies: Anomaly[]
+  equityConcerns?: EquityConcern[]
+  predictions?: Prediction[]
   modelUsed: string
   createdAt: string
 }
@@ -262,6 +283,55 @@ export function HealthSummary({ patientId }: HealthSummaryProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Health Equity Insights */}
+      {summary?.equityConcerns && summary.equityConcerns.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-serif text-xl flex items-center gap-2">
+              <Scale className="h-5 w-5 text-primary" aria-hidden="true" />
+              Health Equity Insights
+            </CardTitle>
+            <CardDescription>
+              How your metrics compare to population averages
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {summary.equityConcerns.map((concern, index) => (
+              <div
+                key={`equity-${concern.metric}-${index}`}
+                className="space-y-2"
+              >
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">{concern.metric}</span>
+                  <Badge
+                    variant={
+                      concern.gapPercentage > 20 ? 'destructive' : 'secondary'
+                    }
+                  >
+                    {concern.gapPercentage}% above average
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>You: {concern.patientValue}</span>
+                  <span>|</span>
+                  <span>Avg: {concern.populationAverage}</span>
+                </div>
+                <Progress
+                  value={Math.min(
+                    100,
+                    (100 / (100 + concern.gapPercentage)) * 100,
+                  )}
+                  className="h-2"
+                />
+                <p className="text-sm text-primary">
+                  {concern.suggestedAction}
+                </p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Anomalies */}
       {hasAnomalies && (

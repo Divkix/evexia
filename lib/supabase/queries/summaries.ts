@@ -31,10 +31,30 @@ export interface Anomaly {
   message: string
 }
 
+export interface EquityConcern {
+  metric: string
+  patientValue: string
+  populationAverage: string
+  gapPercentage: number
+  suggestedAction: string
+}
+
+export interface Prediction {
+  condition: string
+  currentRisk: 'low' | 'moderate' | 'high' | 'critical'
+  probability: number
+  timeframe: string
+  trendDirection: 'improving' | 'stable' | 'worsening'
+  actionableSteps: string[]
+  evidenceBasis: string
+}
+
 export interface SummaryData {
   clinicianSummary: string
   patientSummary: string
   anomalies: Anomaly[]
+  equityConcerns: EquityConcern[]
+  predictions: Prediction[]
   modelUsed: string
 }
 
@@ -79,13 +99,20 @@ export async function saveSummary(
   // Delete existing summaries for this patient
   await supabase.from('summaries').delete().eq('patient_id', patientId)
 
+  // Store anomalies, equity concerns, and predictions in the anomalies jsonb column
+  const anomaliesData = {
+    anomalies: data.anomalies,
+    equityConcerns: data.equityConcerns,
+    predictions: data.predictions,
+  }
+
   const { data: summary, error } = await supabase
     .from('summaries')
     .insert({
       patient_id: patientId,
       clinician_summary: data.clinicianSummary,
       patient_summary: data.patientSummary,
-      anomalies: data.anomalies as unknown as Json,
+      anomalies: anomaliesData as unknown as Json,
       model_used: data.modelUsed,
     })
     .select()
@@ -155,5 +182,47 @@ export async function checkSummaryRateLimit(
     allowed: true,
     retryAfterMs: 0,
     lastGeneratedAt,
+  }
+}
+
+/**
+ * Parse the stored anomalies JSON to extract all summary data components.
+ * Handles both legacy format (plain array) and new format (object with nested arrays).
+ */
+export function parseSummaryAnomalies(anomaliesJson: Json | null): {
+  anomalies: Anomaly[]
+  equityConcerns: EquityConcern[]
+  predictions: Prediction[]
+} {
+  if (!anomaliesJson) {
+    return { anomalies: [], equityConcerns: [], predictions: [] }
+  }
+
+  // Handle legacy format: plain array of anomalies
+  if (Array.isArray(anomaliesJson)) {
+    return {
+      anomalies: anomaliesJson as unknown as Anomaly[],
+      equityConcerns: [],
+      predictions: [],
+    }
+  }
+
+  // Handle new format: object with nested arrays
+  const data = anomaliesJson as {
+    anomalies?: unknown[]
+    equityConcerns?: unknown[]
+    predictions?: unknown[]
+  }
+
+  return {
+    anomalies: Array.isArray(data.anomalies)
+      ? (data.anomalies as unknown as Anomaly[])
+      : [],
+    equityConcerns: Array.isArray(data.equityConcerns)
+      ? (data.equityConcerns as unknown as EquityConcern[])
+      : [],
+    predictions: Array.isArray(data.predictions)
+      ? (data.predictions as unknown as Prediction[])
+      : [],
   }
 }
