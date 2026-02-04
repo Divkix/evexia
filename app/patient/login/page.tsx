@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -44,6 +44,22 @@ export default function PatientLoginPage() {
   const [otpCode, setOtpCode] = useState('')
 
   const isDevelopmentBypass = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true'
+
+  // Check if already authenticated and redirect
+  useEffect(() => {
+    async function checkSession() {
+      try {
+        const response = await fetch('/api/auth/session')
+        const data = await response.json()
+        if (data.authenticated && data.patient) {
+          router.replace('/patient')
+        }
+      } catch {
+        // Ignore errors, user needs to log in
+      }
+    }
+    checkSession()
+  }, [router])
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault()
