@@ -13,6 +13,7 @@ const DEMO_PATIENT = {
   email: 'demo@evexia.health',
   dateOfBirth: '1985-03-15',
   phone: '555-123-4567',
+  allowEmergencyAccess: true, // Enable emergency ER access for demo
 }
 
 const DEMO_ORGANIZATIONS = [
