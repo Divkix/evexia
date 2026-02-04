@@ -34,6 +34,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       patientSummary: summary.patientSummary,
       anomalies: summary.anomalies,
       modelUsed: summary.modelUsed,
+      createdAt: summary.createdAt,
       disclaimer: MEDICAL_DISCLAIMER,
     })
   } catch (error) {
@@ -83,7 +84,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
     }
 
     const summaryResult = await generateSummary(records)
-    await saveSummary(id, summaryResult.data)
+    const savedSummary = await saveSummary(id, summaryResult.data)
 
     return NextResponse.json({
       success: true,
@@ -93,6 +94,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       patientSummary: summaryResult.data.patientSummary,
       anomalies: summaryResult.data.anomalies,
       modelUsed: summaryResult.data.modelUsed,
+      createdAt: savedSummary.createdAt,
       disclaimer: MEDICAL_DISCLAIMER,
     })
   } catch (error) {
