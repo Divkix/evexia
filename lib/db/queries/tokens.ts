@@ -31,6 +31,16 @@ export async function createShareToken(
   return result[0]
 }
 
+export async function getTokenById(id: string): Promise<ShareToken | null> {
+  const result = await db
+    .select()
+    .from(shareTokens)
+    .where(eq(shareTokens.id, id))
+    .limit(1)
+
+  return result[0] ?? null
+}
+
 export async function getShareToken(token: string): Promise<ShareToken | null> {
   const result = await db
     .select()
