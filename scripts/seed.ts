@@ -10,9 +10,9 @@ import {
 
 const DEMO_PATIENTS = [
   {
-    name: 'Maria Santos',
-    email: 'demo@evexia.health',
-    dateOfBirth: '1985-03-15',
+    name: 'Divanshu Chauhan',
+    email: 'chauhan.divanshu@gmail.com',
+    dateOfBirth: '2003-01-09',
     phone: '555-123-4567',
     allowEmergencyAccess: true, // Enable emergency ER access for demo
   },
