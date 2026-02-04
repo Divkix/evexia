@@ -4,6 +4,7 @@ import { AlertTriangle, Home, Info, Key, Mail } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { LogoWithText } from '@/components/brand'
 import { HealthCharts } from '@/components/patient/health-charts'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -494,7 +495,10 @@ export default function ProviderPortalPage() {
 
   // Access request form with tabs
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4 py-8">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-muted/40 px-4 py-8">
+      <div className="mb-8">
+        <LogoWithText size={48} className="text-foreground" />
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Provider Portal</CardTitle>

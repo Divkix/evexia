@@ -2,7 +2,6 @@
 
 import {
   FileText,
-  Heart,
   Key,
   LayoutDashboard,
   Loader2,
@@ -13,6 +12,7 @@ import {
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { Logo } from '@/components/brand'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
@@ -119,9 +119,9 @@ export default function PatientDashboardLayout({
       <aside className="flex w-64 flex-col border-r border-sidebar-border bg-sidebar">
         {/* Logo and title */}
         <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
-          <Heart className="size-7 text-primary" />
+          <Logo size={28} />
           <span className="font-serif text-xl font-semibold text-sidebar-foreground">
-            Evexia
+            evexia
           </span>
         </div>
 

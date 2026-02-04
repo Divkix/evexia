@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { LogoWithText } from '@/components/brand'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -148,7 +149,10 @@ export default function PatientLoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-muted/40 px-4">
+      <div className="mb-8">
+        <LogoWithText size={48} className="text-foreground" />
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Patient Login</CardTitle>

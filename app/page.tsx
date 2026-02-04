@@ -1,6 +1,7 @@
 import { ArrowRight, Brain, Building2, Shield } from 'lucide-react'
 import Link from 'next/link'
 
+import { LogoWithText } from '@/components/brand'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -34,6 +35,19 @@ const features = [
 export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col">
+      {/* Header */}
+      <header className="flex items-center justify-between border-b px-6 py-4">
+        <LogoWithText size={36} className="text-foreground" />
+        <nav className="flex gap-4">
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/patient/login">Patient Login</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/provider">Provider Portal</Link>
+          </Button>
+        </nav>
+      </header>
+
       {/* Hero Section */}
       <main className="flex flex-1 flex-col items-center justify-center px-6 py-24">
         <div className="mx-auto max-w-4xl text-center">
