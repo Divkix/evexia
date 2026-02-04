@@ -1,7 +1,6 @@
 'use client'
 
 import { AlertTriangle, Info, RefreshCw, Scale } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -44,7 +43,7 @@ export interface Prediction {
   evidenceBasis: string
 }
 
-interface HealthSummaryData {
+export interface HealthSummaryData {
   id: string
   clinicianSummary: string
   patientSummary: string
@@ -56,7 +55,10 @@ interface HealthSummaryData {
 }
 
 interface HealthSummaryProps {
-  patientId: string
+  summary: HealthSummaryData | null
+  isLoading: boolean
+  isRegenerating: boolean
+  onRegenerate: () => Promise<{ error?: string; success?: boolean } | undefined>
 }
 
 function HealthSummarySkeleton() {
@@ -152,81 +154,23 @@ function getSeverityStyles(severity: AnomalySeverity): {
   }
 }
 
-export function HealthSummary({ patientId }: HealthSummaryProps) {
-  const [summary, setSummary] = useState<HealthSummaryData | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isRegenerating, setIsRegenerating] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchSummary = useCallback(async () => {
-    try {
-      setError(null)
-      const response = await fetch(`/api/patient/${patientId}/summary`)
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          setSummary(null)
-          return
-        }
-        throw new Error('Failed to fetch health summary')
-      }
-
-      const data = await response.json()
-      setSummary(data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [patientId])
-
-  const regenerateSummary = async () => {
-    try {
-      setIsRegenerating(true)
-      setError(null)
-
-      const response = await fetch(`/api/patient/${patientId}/summary`, {
-        method: 'POST',
-      })
-
-      // Handle rate limit specifically
-      if (response.status === 429) {
-        const data = await response.json()
-        toast.warning(data.message || 'Please wait before regenerating')
-        return
-      }
-
-      if (!response.ok) {
-        throw new Error('Failed to generate summary')
-      }
-
-      const data = await response.json()
-      setSummary(data)
+export function HealthSummary({
+  summary,
+  isLoading,
+  isRegenerating,
+  onRegenerate,
+}: HealthSummaryProps) {
+  const handleRegenerate = async () => {
+    const result = await onRegenerate()
+    if (result?.error) {
+      toast.warning(result.error)
+    } else if (result?.success) {
       toast.success('Summary regenerated')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-      toast.error('Failed to regenerate summary')
-    } finally {
-      setIsRegenerating(false)
     }
   }
-
-  useEffect(() => {
-    fetchSummary()
-  }, [fetchSummary])
 
   if (isLoading) {
     return <HealthSummarySkeleton />
-  }
-
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" aria-hidden="true" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    )
   }
 
   const clinicianPoints = summary
@@ -390,7 +334,7 @@ export function HealthSummary({ patientId }: HealthSummaryProps) {
       {/* Regenerate Button */}
       <div className="flex justify-end">
         <Button
-          onClick={regenerateSummary}
+          onClick={handleRegenerate}
           disabled={isRegenerating}
           variant="outline"
         >

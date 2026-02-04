@@ -4,7 +4,10 @@ import { Activity, Building2, Calendar, FileText, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
 import { HealthCharts } from '@/components/patient/health-charts'
-import { HealthSummary } from '@/components/patient/health-summary'
+import {
+  HealthSummary,
+  type HealthSummaryData,
+} from '@/components/patient/health-summary'
 import { HealthTrajectory } from '@/components/patient/health-trajectory'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -159,6 +162,11 @@ export default function PatientDashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Summary state - lifted from child components to coordinate updates
+  const [summary, setSummary] = useState<HealthSummaryData | null>(null)
+  const [isSummaryLoading, setIsSummaryLoading] = useState(true)
+  const [isRegenerating, setIsRegenerating] = useState(false)
+
   // Calculate stats from records
   const totalRecords = records.length
   const uniqueHospitals = new Set(records.map((r) => r.hospital)).size
@@ -171,6 +179,47 @@ export default function PatientDashboardPage() {
         )
       : 'N/A'
   const recordCategories = new Set(records.map((r) => r.category)).size
+
+  // Fetch summary data
+  const fetchSummary = useCallback(async (id: string) => {
+    try {
+      const response = await fetch(`/api/patient/${id}/summary`)
+      if (response.ok) {
+        const data = await response.json()
+        setSummary(data)
+      } else if (response.status === 404) {
+        setSummary(null)
+      }
+    } finally {
+      setIsSummaryLoading(false)
+    }
+  }, [])
+
+  // Regenerate summary - coordinated so both components stay in sync
+  const regenerateSummary = useCallback(async () => {
+    if (!patientId) return
+    setIsRegenerating(true)
+    try {
+      const response = await fetch(`/api/patient/${patientId}/summary`, {
+        method: 'POST',
+      })
+
+      if (response.status === 429) {
+        const data = await response.json()
+        return { error: data.message || 'Please wait before regenerating' }
+      }
+
+      if (response.ok) {
+        const data = await response.json()
+        setSummary(data)
+        return { success: true }
+      }
+
+      return { error: 'Failed to generate summary' }
+    } finally {
+      setIsRegenerating(false)
+    }
+  }, [patientId])
 
   const fetchData = useCallback(async () => {
     try {
@@ -188,7 +237,7 @@ export default function PatientDashboardPage() {
       const id = sessionData.patient.id
       setPatientId(id)
 
-      // Fetch records
+      // Fetch records and summary in parallel
       const recordsRes = await fetch(`/api/patient/${id}/records`)
 
       if (!recordsRes.ok) {
@@ -198,13 +247,16 @@ export default function PatientDashboardPage() {
       const recordsData: RecordsResponse = await recordsRes.json()
       setRecords(recordsData.records)
       setChartData(transformChartData(recordsData.chartData))
+
+      // Fetch summary after we have the patient ID
+      fetchSummary(id)
     } catch (err) {
       console.error('Dashboard fetch error:', err)
       setError(err instanceof Error ? err.message : 'Failed to load dashboard')
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [fetchSummary])
 
   useEffect(() => {
     fetchData()
@@ -326,10 +378,19 @@ export default function PatientDashboardPage() {
       {chartData && <HealthCharts chartData={chartData} />}
 
       {/* Predictive Health Trajectory */}
-      <HealthTrajectory patientId={patientId} />
+      <HealthTrajectory
+        predictions={summary?.predictions ?? []}
+        isLoading={isSummaryLoading}
+        isRegenerating={isRegenerating}
+      />
 
       {/* Health Summary - Full width */}
-      <HealthSummary patientId={patientId} />
+      <HealthSummary
+        summary={summary}
+        isLoading={isSummaryLoading}
+        isRegenerating={isRegenerating}
+        onRegenerate={regenerateSummary}
+      />
     </div>
   )
 }
