@@ -166,7 +166,7 @@ export function ConsentExplainerModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="!max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl! w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -182,7 +182,7 @@ export function ConsentExplainerModal({
           {/* Selection and Preview Grid */}
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Left Column: Record Type Selection */}
-            <div className="space-y-4 lg:w-[300px] flex-shrink-0">
+            <div className="space-y-4 lg:w-[300px] shrink-0">
               <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
                 Select Records to Share
               </h3>
@@ -239,7 +239,7 @@ export function ConsentExplainerModal({
             </div>
 
             {/* Arrow */}
-            <div className="hidden lg:flex items-center justify-center flex-shrink-0">
+            <div className="hidden lg:flex items-center justify-center shrink-0">
               <ArrowRight
                 className="h-6 w-6 text-muted-foreground"
                 aria-hidden="true"

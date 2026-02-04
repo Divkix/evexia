@@ -258,7 +258,7 @@ export default function PatientDashboardPage() {
       {/* Quick Stats - Bento Grid Layout */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Hero Stat: Total Records - spans 2 columns on lg */}
-        <Card className="card-hover sm:col-span-2 lg:col-span-2 lg:row-span-2 bg-gradient-to-br from-primary/5 via-card to-card">
+        <Card className="card-hover sm:col-span-2 lg:col-span-2 lg:row-span-2 bg-linear-to-br from-primary/5 via-card to-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-base font-medium">
               Total Records
