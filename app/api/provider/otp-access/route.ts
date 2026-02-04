@@ -202,7 +202,6 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
     patientId: patient.id,
     providerName: employee.name,
     providerOrg: organization.name,
-    organizationId: organization.id,
     ipAddress: ip,
     userAgent,
     accessMethod: 'otp',

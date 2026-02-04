@@ -76,7 +76,6 @@ export async function POST(request: NextRequest) {
       patientId: patient.id,
       providerName: employee.name,
       providerOrg: organization.name,
-      organizationId: organization.id,
       ipAddress: ip,
       userAgent,
       accessMethod: 'employee_id',
