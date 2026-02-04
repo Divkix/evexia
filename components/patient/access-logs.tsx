@@ -77,15 +77,18 @@ function getMethodVariant(
   return method?.toLowerCase() === 'otp' ? 'default' : 'secondary'
 }
 
-function getScopeVariant(
-  scope: string,
-): 'default' | 'secondary' | 'outline' | 'destructive' {
+function getScopeStyles(scope: string): string {
+  // Use semantic scope colors from CSS variables
   const scopeLower = scope.toLowerCase()
-  if (scopeLower === 'vitals') return 'default'
-  if (scopeLower === 'labs') return 'secondary'
-  if (scopeLower === 'meds' || scopeLower === 'medications') return 'outline'
-  if (scopeLower === 'encounters') return 'destructive'
-  return 'outline'
+  if (scopeLower === 'vitals')
+    return 'bg-[hsl(var(--scope-vitals))] text-white border-transparent'
+  if (scopeLower === 'labs')
+    return 'bg-[hsl(var(--scope-labs))] text-white border-transparent'
+  if (scopeLower === 'meds' || scopeLower === 'medications')
+    return 'bg-[hsl(var(--scope-medications))] text-black border-transparent'
+  if (scopeLower === 'encounters')
+    return 'bg-[hsl(var(--scope-encounters))] text-white border-transparent'
+  return ''
 }
 
 function AccessLogsSkeleton() {
@@ -259,8 +262,7 @@ export function AccessLogs({ patientId }: AccessLogsProps) {
                         log.scope.map((s) => (
                           <Badge
                             key={`${log.id}-${s}`}
-                            variant={getScopeVariant(s)}
-                            className="text-xs"
+                            className={`text-xs ${getScopeStyles(s)}`}
                           >
                             {s}
                           </Badge>

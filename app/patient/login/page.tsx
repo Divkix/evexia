@@ -1,5 +1,6 @@
 'use client'
 
+import { AnimatePresence, motion } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -15,6 +16,13 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { OTPInput } from '@/components/ui/otp-input'
+
+const stepVariants = {
+  initial: { opacity: 0, x: 20 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -20 },
+}
 
 type LoginStep = 'credentials' | 'verification'
 
@@ -164,86 +172,98 @@ export default function PatientLoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {step === 'credentials' ? (
-            <form onSubmit={handleSendOtp} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="John Doe..."
-                  autoComplete="name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  disabled={isLoading}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                <Input
-                  id="dateOfBirth"
-                  type="date"
-                  autoComplete="bday"
-                  value={dateOfBirth}
-                  onChange={(e) => setDateOfBirth(e.target.value)}
-                  disabled={isLoading}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Sending...' : 'Send Verification Code'}
-              </Button>
-              {isDevelopmentBypass && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleDemoBypass}
-                >
-                  Continue as Demo Patient
-                </Button>
-              )}
-            </form>
-          ) : (
-            <form onSubmit={handleVerifyOtp} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="otpCode">Verification Code</Label>
-                <Input
-                  id="otpCode"
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={8}
-                  placeholder="00000000"
-                  autoComplete="one-time-code"
-                  value={otpCode}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '')
-                    setOtpCode(value)
-                  }}
-                  disabled={isLoading}
-                  required
-                  className="text-center text-lg tracking-widest"
-                />
-                <p className="text-xs text-muted-foreground text-center">
-                  Code sent to {maskedEmail}
-                </p>
-              </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Verifying...' : 'Verify'}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full"
-                onClick={handleBackToCredentials}
-                disabled={isLoading}
+          <AnimatePresence mode="wait">
+            {step === 'credentials' ? (
+              <motion.div
+                key="credentials"
+                variants={stepVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.2 }}
               >
-                Back
-              </Button>
-            </form>
-          )}
+                <form onSubmit={handleSendOtp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName">Full Name</Label>
+                    <Input
+                      id="fullName"
+                      type="text"
+                      placeholder="John Doe..."
+                      autoComplete="name"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      disabled={isLoading}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                    <Input
+                      id="dateOfBirth"
+                      type="date"
+                      autoComplete="bday"
+                      value={dateOfBirth}
+                      onChange={(e) => setDateOfBirth(e.target.value)}
+                      disabled={isLoading}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? 'Sending...' : 'Send Verification Code'}
+                  </Button>
+                  {isDevelopmentBypass && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      onClick={handleDemoBypass}
+                    >
+                      Continue as Demo Patient
+                    </Button>
+                  )}
+                </form>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="verification"
+                variants={stepVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.2 }}
+              >
+                <form onSubmit={handleVerifyOtp} className="space-y-4">
+                  <div className="space-y-3">
+                    <Label htmlFor="otpCode" className="block text-center">
+                      Verification Code
+                    </Label>
+                    <OTPInput
+                      length={8}
+                      value={otpCode}
+                      onChange={setOtpCode}
+                      disabled={isLoading}
+                      autoFocus
+                    />
+                    <p className="text-center text-xs text-muted-foreground">
+                      Code sent to {maskedEmail}
+                    </p>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? 'Verifying...' : 'Verify'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full"
+                    onClick={handleBackToCredentials}
+                    disabled={isLoading}
+                  >
+                    Back
+                  </Button>
+                </form>
+              </motion.div>
+            )}
+          </AnimatePresence>
           <div className="mt-4 text-center">
             <Link
               href="/"
