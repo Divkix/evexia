@@ -22,9 +22,12 @@ bun run dead-code        # Check for unused exports (knip)
 # Database (Drizzle + Supabase)
 bun run db:generate      # Generate migration from schema changes
 bun run db:migrate       # Run migrations
-bun run db:push          # Push schema directly (dev only)
 bun run db:seed          # Seed demo data
 bun run db:studio        # Open Drizzle Studio
+
+# Database reset (use Supabase CLI, not drizzle-kit push)
+supabase db reset --linked   # Reset and re-run migrations on linked remote DB
+bun run db:seed              # Re-seed demo data after reset
 
 # Cloudflare Workers deployment
 bun run preview          # Build and preview locally
@@ -40,6 +43,8 @@ bun run cf:deploy        # Deploy to Cloudflare Workers
 - The postgres-js driver is only used for local seeding (`scripts/seed.ts`), not in production runtime
 
 Why this split: Cloudflare Workers cannot use TCP sockets (postgres-js), so all API routes use Supabase's fetch-based client.
+
+**Important**: Use `supabase db reset --linked` to reset the database, not `drizzle-kit push`. Drizzle-kit has compatibility issues with Supabase's schema constraints.
 
 ### API Routes (`app/api/`)
 - `/api/auth/*` - OTP-based authentication via Supabase Auth
