@@ -1,11 +1,14 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "evexia",
-  "compatibility_date": "2024-01-01",
-  "compatibility_flags": ["nodejs_compat"],
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-11-06",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": ".open-next/assets"
+  },
   "vars": {
     "ENVIRONMENT": "production"
   }
-  // Assets are served from the .open-next directory
-  // Configuration for opennextjs-cloudflare
 }

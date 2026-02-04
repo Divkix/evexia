@@ -16,7 +16,8 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "bun run scripts/seed.ts",
     "cf:build": "opennextjs-cloudflare build",
-    "cf:deploy": "wrangler deploy"
+    "cf:deploy": "wrangler deploy",
+    "preview": "bunx opennextjs-cloudflare build && bunx opennextjs-cloudflare preview"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
