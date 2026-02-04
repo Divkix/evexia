@@ -2,6 +2,7 @@
 
 import { AlertTriangle, Info, RefreshCw } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -167,14 +168,23 @@ export function HealthSummary({ patientId }: HealthSummaryProps) {
         method: 'POST',
       })
 
+      // Handle rate limit specifically
+      if (response.status === 429) {
+        const data = await response.json()
+        toast.warning(data.message || 'Please wait before regenerating')
+        return
+      }
+
       if (!response.ok) {
         throw new Error('Failed to generate summary')
       }
 
       const data = await response.json()
       setSummary(data)
+      toast.success('Summary regenerated')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
+      toast.error('Failed to regenerate summary')
     } finally {
       setIsRegenerating(false)
     }
