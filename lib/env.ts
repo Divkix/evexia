@@ -28,3 +28,25 @@ export const env = {
     bypassAuth: () => process.env.BYPASS_AUTH_LOCAL === 'true',
   },
 }
+
+/**
+ * Validate AI configuration at startup.
+ * Logs a warning if AI_ENABLED=true but OPENROUTER_API_KEY is missing.
+ * Non-throwing to work with Cloudflare Workers (stateless).
+ */
+export function validateAIConfig(): void {
+  const aiEnabled = env.ai.enabled()
+  const apiKey = env.ai.openRouterKey()
+
+  if (aiEnabled && !apiKey) {
+    console.warn(
+      '[AI Config Warning] AI_ENABLED is true but OPENROUTER_API_KEY is not set. ' +
+        'AI summaries will fall back to mock generation.',
+    )
+  }
+}
+
+// Run validation at module load (only on server)
+if (typeof window === 'undefined') {
+  validateAIConfig()
+}

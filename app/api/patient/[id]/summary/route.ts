@@ -3,6 +3,7 @@ import { generateSummary, MEDICAL_DISCLAIMER } from '@/lib/ai/summary'
 import { getPatientById } from '@/lib/supabase/queries/patients'
 import { getPatientRecords } from '@/lib/supabase/queries/records'
 import {
+  checkSummaryRateLimit,
   getPatientSummary,
   saveSummary,
 } from '@/lib/supabase/queries/summaries'
@@ -53,6 +54,25 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
+    // Check rate limit before generating
+    const rateLimit = await checkSummaryRateLimit(id)
+    if (!rateLimit.allowed) {
+      const retryAfterSeconds = Math.ceil(rateLimit.retryAfterMs / 1000)
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded',
+          retryAfterSeconds,
+          message: `Please wait ${retryAfterSeconds} seconds before regenerating`,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(retryAfterSeconds),
+          },
+        },
+      )
+    }
+
     const records = await getPatientRecords(id)
 
     if (records.length === 0) {
@@ -62,15 +82,17 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       })
     }
 
-    const summaryData = await generateSummary(records)
-    await saveSummary(id, summaryData)
+    const summaryResult = await generateSummary(records)
+    await saveSummary(id, summaryResult.data)
 
     return NextResponse.json({
       success: true,
-      clinicianSummary: summaryData.clinicianSummary,
-      patientSummary: summaryData.patientSummary,
-      anomalies: summaryData.anomalies,
-      modelUsed: summaryData.modelUsed,
+      usedFallback: summaryResult.usedFallback,
+      fallbackReason: summaryResult.fallbackReason ?? null,
+      clinicianSummary: summaryResult.data.clinicianSummary,
+      patientSummary: summaryResult.data.patientSummary,
+      anomalies: summaryResult.data.anomalies,
+      modelUsed: summaryResult.data.modelUsed,
       disclaimer: MEDICAL_DISCLAIMER,
     })
   } catch (error) {

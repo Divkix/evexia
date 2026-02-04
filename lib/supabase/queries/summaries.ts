@@ -84,3 +84,55 @@ export async function deleteSummary(patientId: string): Promise<void> {
 
   if (error) throw error
 }
+
+const RATE_LIMIT_COOLDOWN_MS = 30_000 // 30 seconds
+
+export interface RateLimitResult {
+  allowed: boolean
+  retryAfterMs: number
+  lastGeneratedAt: string | null
+}
+
+export async function checkSummaryRateLimit(
+  patientId: string,
+): Promise<RateLimitResult> {
+  const supabase = createAdminClient()
+
+  const { data, error } = await supabase
+    .from('summaries')
+    .select('created_at')
+    .eq('patient_id', patientId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single()
+
+  // No previous summary exists - allow generation
+  if (error?.code === 'PGRST116' || !data) {
+    return {
+      allowed: true,
+      retryAfterMs: 0,
+      lastGeneratedAt: null,
+    }
+  }
+
+  if (error) throw error
+
+  const lastGeneratedAt = data.created_at
+  const lastGeneratedTime = new Date(lastGeneratedAt).getTime()
+  const now = Date.now()
+  const elapsedMs = now - lastGeneratedTime
+
+  if (elapsedMs < RATE_LIMIT_COOLDOWN_MS) {
+    return {
+      allowed: false,
+      retryAfterMs: RATE_LIMIT_COOLDOWN_MS - elapsedMs,
+      lastGeneratedAt,
+    }
+  }
+
+  return {
+    allowed: true,
+    retryAfterMs: 0,
+    lastGeneratedAt,
+  }
+}
