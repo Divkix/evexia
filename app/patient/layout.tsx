@@ -72,6 +72,11 @@ export default function PatientDashboardLayout({
     fetchSession()
   }, [router])
 
+  // Early return for login page - don't render sidebar
+  if (pathname === '/patient/login') {
+    return <>{children}</>
+  }
+
   async function handleLogout() {
     setLoggingOut(true)
     try {
