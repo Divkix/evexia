@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     const { error } = await supabase.auth.signInWithOtp({
       email: patient.email,
       options: {
-        shouldCreateUser: false,
+        shouldCreateUser: true,
       },
     })
 
