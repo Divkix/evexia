@@ -24,6 +24,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@openrouter/ai-sdk-provider": "^2.1.1",
+    "@radix-ui/react-progress": "^1.1.8",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.94.0",
     "ai": "^6.0.69",

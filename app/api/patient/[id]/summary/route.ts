@@ -3,7 +3,6 @@ import { generateSummary, MEDICAL_DISCLAIMER } from '@/lib/ai/summary'
 import { getPatientById } from '@/lib/supabase/queries/patients'
 import { getPatientRecords } from '@/lib/supabase/queries/records'
 import {
-  checkSummaryRateLimit,
   getPatientSummary,
   saveSummary,
 } from '@/lib/supabase/queries/summaries'
@@ -53,25 +52,6 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
     const patient = await getPatientById(id)
     if (!patient) {
       return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
-    }
-
-    // Check rate limit before generating
-    const rateLimit = await checkSummaryRateLimit(id)
-    if (!rateLimit.allowed) {
-      const retryAfterSeconds = Math.ceil(rateLimit.retryAfterMs / 1000)
-      return NextResponse.json(
-        {
-          error: 'Rate limit exceeded',
-          retryAfterSeconds,
-          message: `Please wait ${retryAfterSeconds} seconds before regenerating`,
-        },
-        {
-          status: 429,
-          headers: {
-            'Retry-After': String(retryAfterSeconds),
-          },
-        },
-      )
     }
 
     const records = await getPatientRecords(id)
