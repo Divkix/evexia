@@ -105,7 +105,9 @@ function SingleChart({
                 fontSize: '0.875rem',
               }}
               labelStyle={{ color: MUTED_FOREGROUND }}
-              formatter={(value) => [`${value ?? ''}${unit}`, 'Value']}
+              formatter={(value: number | undefined) =>
+                [`${value ?? ''}${unit}`, 'Value'] as [string, string]
+              }
             />
             {referenceLines.map((ref) => (
               <ReferenceLine
