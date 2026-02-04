@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
             clinicianSummary: summary.clinicianSummary,
             patientSummary: summary.patientSummary,
             anomalies: filterAnomaliesByScope(
-              parseSummaryAnomalies(summary.anomalies).anomalies,
+              parseSummaryAnomalies(summary.anomalies),
               shareToken.scope,
             ),
             hasFullAccess: hasFullAccess(shareToken.scope),

@@ -156,7 +156,7 @@ async function handleRequestOtp(request: NextRequest, body: RequestOtpBody) {
             clinicianSummary: summary.clinicianSummary,
             patientSummary: summary.patientSummary,
             anomalies: filterAnomaliesByScope(
-              parseSummaryAnomalies(summary.anomalies).anomalies,
+              parseSummaryAnomalies(summary.anomalies),
               FULL_SCOPE,
             ),
             hasFullAccess: true,
@@ -306,7 +306,7 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
             clinicianSummary: summary.clinicianSummary,
             patientSummary: summary.patientSummary,
             anomalies: filterAnomaliesByScope(
-              parseSummaryAnomalies(summary.anomalies).anomalies,
+              parseSummaryAnomalies(summary.anomalies),
               scope,
             ),
             hasFullAccess: hasFullAccess(scope),
@@ -376,7 +376,7 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
           clinicianSummary: summary.clinicianSummary,
           patientSummary: summary.patientSummary,
           anomalies: filterAnomaliesByScope(
-            parseSummaryAnomalies(summary.anomalies).anomalies,
+            parseSummaryAnomalies(summary.anomalies),
             scope,
           ),
           hasFullAccess: hasFullAccess(scope),

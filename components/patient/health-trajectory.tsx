@@ -21,7 +21,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export interface Prediction {
@@ -147,10 +146,9 @@ function PredictionCard({ prediction }: { prediction: Prediction }) {
             <span className="text-muted-foreground">Risk Probability</span>
             <span className="font-medium">{prediction.probability}%</span>
           </div>
-          <div className="relative">
-            <Progress value={prediction.probability} className="h-3" />
+          <div className="relative h-3 w-full overflow-hidden rounded-full bg-primary/20">
             <div
-              className={`absolute inset-0 h-3 rounded-full ${riskConfig.progressColor} transition-all`}
+              className={`h-full rounded-full ${riskConfig.progressColor} transition-all`}
               style={{ width: `${prediction.probability}%` }}
             />
           </div>
