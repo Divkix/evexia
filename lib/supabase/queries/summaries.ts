@@ -170,7 +170,9 @@ export async function checkSummaryRateLimit(
   const now = Date.now()
   const elapsedMs = now - lastGeneratedTime
 
-  if (elapsedMs < RATE_LIMIT_COOLDOWN_MS) {
+  // Only rate limit if elapsed time is positive and less than cooldown
+  // Negative elapsed (clock skew) means timestamp is in future - allow regeneration
+  if (elapsedMs >= 0 && elapsedMs < RATE_LIMIT_COOLDOWN_MS) {
     return {
       allowed: false,
       retryAfterMs: RATE_LIMIT_COOLDOWN_MS - elapsedMs,
