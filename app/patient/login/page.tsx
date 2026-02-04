@@ -61,9 +61,9 @@ export default function PatientLoginPage() {
       }
     }
     checkSession()
-  }, [router])
+  }, [])
 
-  const handleSendOtp = async (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     if (!fullName.trim() || !dateOfBirth) {
@@ -101,7 +101,7 @@ export default function PatientLoginPage() {
     }
   }
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     if (!otpCode || otpCode.length < 6) {

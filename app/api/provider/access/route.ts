@@ -33,8 +33,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate organization
-    const organization = await getOrganizationBySlug(organizationSlug)
+    // Batch 1: Validate organization and token in parallel (independent)
+    const [organization, shareToken] = await Promise.all([
+      getOrganizationBySlug(organizationSlug),
+      getValidShareToken(token),
+    ])
+
     if (!organization) {
       return NextResponse.json(
         { error: 'Invalid organization' },
@@ -42,8 +46,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate token
-    const shareToken = await getValidShareToken(token)
     if (!shareToken) {
       return NextResponse.json(
         { error: 'Invalid or expired token' },
@@ -51,11 +53,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Lookup employee by employeeId and organizationId
-    const employee = await getEmployeeByEmployeeIdAndOrg(
-      employeeId,
-      organization.id,
-    )
+    // Batch 2: Employee lookup (needs org.id) and patient lookup (needs shareToken.patientId) in parallel
+    const [employee, patient] = await Promise.all([
+      getEmployeeByEmployeeIdAndOrg(employeeId, organization.id),
+      getPatientById(shareToken.patientId),
+    ])
+
     if (!employee) {
       return NextResponse.json(
         { error: 'Invalid employee ID for this organization' },
@@ -63,36 +66,35 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get patient from token
-    const patient = await getPatientById(shareToken.patientId)
     if (!patient) {
       return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
-    // Log access with employee info
+    // Extract request metadata for logging
     const ip =
       request.headers.get('x-forwarded-for') ??
       request.headers.get('x-real-ip') ??
       'unknown'
     const userAgent = request.headers.get('user-agent') ?? undefined
 
-    await logAccess({
-      tokenId: shareToken.id,
-      patientId: patient.id,
-      providerName: employee.name,
-      providerOrg: organization.name,
-      ipAddress: ip,
-      userAgent,
-      accessMethod: 'employee_id',
-      scope: shareToken.scope,
-    })
+    // Batch 3: Log access, fetch records, and fetch summary in parallel
+    const [, records, summary] = await Promise.all([
+      logAccess({
+        tokenId: shareToken.id,
+        patientId: patient.id,
+        providerName: employee.name,
+        providerOrg: organization.name,
+        ipAddress: ip,
+        userAgent,
+        accessMethod: 'employee_id',
+        scope: shareToken.scope,
+      }),
+      getPatientRecords(patient.id, {
+        categories: shareToken.scope as RecordCategory[],
+      }),
+      getPatientSummary(patient.id),
+    ])
 
-    // Get scoped records
-    const records = await getPatientRecords(patient.id, {
-      categories: shareToken.scope as RecordCategory[],
-    })
-
-    const summary = await getPatientSummary(patient.id)
     const chartData = extractChartData(records)
 
     return NextResponse.json({

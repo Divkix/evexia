@@ -42,7 +42,7 @@ export default function TokensPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [router])
+  }, [])
 
   useEffect(() => {
     checkSession()

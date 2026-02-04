@@ -42,7 +42,7 @@ export default function ProvidersPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [router])
+  }, [])
 
   useEffect(() => {
     checkSession()

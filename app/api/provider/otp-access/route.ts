@@ -67,13 +67,21 @@ async function handleRequestOtp(body: RequestOtpBody) {
     )
   }
 
-  // Validate organization
-  const organization = await getOrganizationBySlug(organizationSlug)
+  // Batch 1: Organization and patient lookups are independent
+  const [organization, patient] = await Promise.all([
+    getOrganizationBySlug(organizationSlug),
+    getPatientById(patientId),
+  ])
+
   if (!organization) {
     return NextResponse.json({ error: 'Invalid organization' }, { status: 403 })
   }
 
-  // Lookup employee by employeeId and organizationId
+  if (!patient) {
+    return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+  }
+
+  // Employee lookup depends on organization.id
   const employee = await getEmployeeByEmployeeIdAndOrg(
     employeeId,
     organization.id,
@@ -85,13 +93,7 @@ async function handleRequestOtp(body: RequestOtpBody) {
     )
   }
 
-  // Find patient
-  const patient = await getPatientById(patientId)
-  if (!patient) {
-    return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
-  }
-
-  // Check if employee is an authorized provider for this patient
+  // Provider lookup depends on employee.id
   const provider = await getProviderByPatientAndEmployeeId(
     patientId,
     employee.id,
@@ -145,13 +147,21 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
     )
   }
 
-  // Validate organization
-  const organization = await getOrganizationBySlug(organizationSlug)
+  // Batch 1: Organization and patient lookups are independent
+  const [organization, patient] = await Promise.all([
+    getOrganizationBySlug(organizationSlug),
+    getPatientById(patientId),
+  ])
+
   if (!organization) {
     return NextResponse.json({ error: 'Invalid organization' }, { status: 403 })
   }
 
-  // Lookup employee by employeeId and organizationId
+  if (!patient) {
+    return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+  }
+
+  // Employee lookup depends on organization.id
   const employee = await getEmployeeByEmployeeIdAndOrg(
     employeeId,
     organization.id,
@@ -163,13 +173,7 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
     )
   }
 
-  // Find patient
-  const patient = await getPatientById(patientId)
-  if (!patient) {
-    return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
-  }
-
-  // Check provider authorization
+  // Provider lookup depends on employee.id
   const provider = await getProviderByPatientAndEmployeeId(
     patientId,
     employee.id,
@@ -181,7 +185,7 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
     )
   }
 
-  // Verify OTP with Supabase
+  // Verify OTP with Supabase (depends on patient.email)
   const supabase = await createClient()
   const { error } = await supabase.auth.verifyOtp({
     email: patient.email,
@@ -196,29 +200,30 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
     )
   }
 
-  // Log access
+  // Extract request metadata for logging
   const ip =
     request.headers.get('x-forwarded-for') ??
     request.headers.get('x-real-ip') ??
     'unknown'
   const userAgent = request.headers.get('user-agent') ?? undefined
 
-  await logAccess({
-    patientId: patient.id,
-    providerName: employee.name,
-    providerOrg: organization.name,
-    ipAddress: ip,
-    userAgent,
-    accessMethod: 'otp',
-    scope: provider.scope,
-  })
+  // Batch 2: Log access, fetch records, and fetch summary in parallel
+  const [, records, summary] = await Promise.all([
+    logAccess({
+      patientId: patient.id,
+      providerName: employee.name,
+      providerOrg: organization.name,
+      ipAddress: ip,
+      userAgent,
+      accessMethod: 'otp',
+      scope: provider.scope,
+    }),
+    getPatientRecords(patient.id, {
+      categories: provider.scope as RecordCategory[],
+    }),
+    getPatientSummary(patient.id),
+  ])
 
-  // Get scoped records
-  const records = await getPatientRecords(patient.id, {
-    categories: provider.scope as RecordCategory[],
-  })
-
-  const summary = await getPatientSummary(patient.id)
   const chartData = extractChartData(records)
 
   return NextResponse.json({

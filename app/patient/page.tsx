@@ -190,7 +190,7 @@ export default function PatientDashboardPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [router])
+  }, [])
 
   useEffect(() => {
     fetchData()

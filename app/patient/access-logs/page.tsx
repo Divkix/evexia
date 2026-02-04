@@ -42,7 +42,7 @@ export default function AccessLogsPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [router])
+  }, [])
 
   useEffect(() => {
     checkSession()
