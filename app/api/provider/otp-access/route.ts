@@ -10,6 +10,9 @@ import {
   getPatientRecords,
   type RecordCategory,
 } from '@/lib/supabase/queries/records'
+
+const FULL_SCOPE: RecordCategory[] = ['vitals', 'labs', 'meds', 'encounters']
+
 import {
   type Anomaly,
   filterAnomaliesByScope,
@@ -99,7 +102,12 @@ async function handleRequestOtp(body: RequestOtpBody) {
     patientId,
     employee.id,
   )
-  if (!provider) {
+
+  // Check for emergency access if no explicit provider relationship
+  const isEmergencyAccess =
+    !provider && employee.isEmergencyStaff && patient.allowEmergencyAccess
+
+  if (!provider && !isEmergencyAccess) {
     return NextResponse.json(
       {
         error:
@@ -108,6 +116,9 @@ async function handleRequestOtp(body: RequestOtpBody) {
       { status: 403 },
     )
   }
+
+  // Determine scope based on access type
+  const scope = isEmergencyAccess ? FULL_SCOPE : provider!.scope
 
   // Send OTP to patient's email via Supabase
   const supabase = await createClient()
@@ -137,9 +148,10 @@ async function handleRequestOtp(body: RequestOtpBody) {
   return NextResponse.json({
     success: true,
     maskedEmail: maskEmail(patient.email),
-    scope: provider.scope,
+    scope,
     providerName: employee.name,
     providerOrg: organization.name,
+    isEmergencyAccess,
   })
 }
 
@@ -187,12 +199,20 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
     patientId,
     employee.id,
   )
-  if (!provider) {
+
+  // Check for emergency access if no explicit provider relationship
+  const isEmergencyAccess =
+    !provider && employee.isEmergencyStaff && patient.allowEmergencyAccess
+
+  if (!provider && !isEmergencyAccess) {
     return NextResponse.json(
       { error: 'Provider not authorized for this patient' },
       { status: 403 },
     )
   }
+
+  // Determine scope based on access type
+  const scope = isEmergencyAccess ? FULL_SCOPE : provider!.scope
 
   // Demo code bypass for demo patients
   if (isDemoCode(code) && isDemoPatient(patient.email)) {
@@ -212,11 +232,12 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
         providerOrg: organization.name,
         ipAddress: ip,
         userAgent,
-        accessMethod: 'otp',
-        scope: provider.scope,
+        accessMethod: isEmergencyAccess ? 'emergency' : 'otp',
+        scope,
+        isEmergencyAccess,
       }),
       getPatientRecords(patient.id, {
-        categories: provider.scope as RecordCategory[],
+        categories: scope as RecordCategory[],
       }),
       getPatientSummary(patient.id),
     ])
@@ -227,7 +248,7 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
       success: true,
       patientName: patient.name,
       dateOfBirth: patient.dateOfBirth,
-      scope: provider.scope,
+      scope,
       records,
       summary: summary
         ? {
@@ -235,10 +256,10 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
             patientSummary: summary.patientSummary,
             anomalies: filterAnomaliesByScope(
               summary.anomalies as Anomaly[] | null,
-              provider.scope,
+              scope,
             ),
-            hasFullAccess: hasFullAccess(provider.scope),
-            scopeWarning: hasFullAccess(provider.scope)
+            hasFullAccess: hasFullAccess(scope),
+            scopeWarning: hasFullAccess(scope)
               ? null
               : 'This summary may reference data outside your authorized scope.',
           }
@@ -246,6 +267,7 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
       chartData,
       providerName: employee.name,
       providerOrg: organization.name,
+      isEmergencyAccess,
       disclaimer: MEDICAL_DISCLAIMER,
     })
   }
@@ -280,11 +302,12 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
       providerOrg: organization.name,
       ipAddress: ip,
       userAgent,
-      accessMethod: 'otp',
-      scope: provider.scope,
+      accessMethod: isEmergencyAccess ? 'emergency' : 'otp',
+      scope,
+      isEmergencyAccess,
     }),
     getPatientRecords(patient.id, {
-      categories: provider.scope as RecordCategory[],
+      categories: scope as RecordCategory[],
     }),
     getPatientSummary(patient.id),
   ])
@@ -295,7 +318,7 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
     success: true,
     patientName: patient.name,
     dateOfBirth: patient.dateOfBirth,
-    scope: provider.scope,
+    scope,
     records,
     summary: summary
       ? {
@@ -303,10 +326,10 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
           patientSummary: summary.patientSummary,
           anomalies: filterAnomaliesByScope(
             summary.anomalies as Anomaly[] | null,
-            provider.scope,
+            scope,
           ),
-          hasFullAccess: hasFullAccess(provider.scope),
-          scopeWarning: hasFullAccess(provider.scope)
+          hasFullAccess: hasFullAccess(scope),
+          scopeWarning: hasFullAccess(scope)
             ? null
             : 'This summary may reference data outside your authorized scope.',
         }
@@ -314,6 +337,7 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
     chartData,
     providerName: employee.name,
     providerOrg: organization.name,
+    isEmergencyAccess,
     disclaimer: MEDICAL_DISCLAIMER,
   })
 }
