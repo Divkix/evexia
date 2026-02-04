@@ -21,7 +21,16 @@ const DEMO_ORGANIZATIONS = [
   { slug: 'phoenician-medical', name: 'Phoenician Medical Center' },
 ]
 
-const DEMO_EMPLOYEES = [
+type DemoEmployee = {
+  employeeId: string
+  name: string
+  orgSlug: string
+  email: string
+  department: string
+  isEmergencyStaff?: boolean
+}
+
+const DEMO_EMPLOYEES: DemoEmployee[] = [
   {
     employeeId: 'EMP-001',
     name: 'Dr. Sarah Chen',
@@ -49,6 +58,14 @@ const DEMO_EMPLOYEES = [
     orgSlug: 'phoenician-medical',
     email: 'emily.watson@phoenicianmed.example',
     department: 'Endocrinology',
+  },
+  {
+    employeeId: 'ER-001',
+    name: 'Dr. Emergency Response',
+    orgSlug: 'banner-health',
+    email: 'er.doctor@bannerhealth.example',
+    department: 'Emergency',
+    isEmergencyStaff: true,
   },
 ]
 
@@ -313,6 +330,7 @@ async function seed() {
       name: emp.name,
       email: emp.email,
       department: emp.department,
+      isEmergencyStaff: emp.isEmergencyStaff ?? false,
     }
 
     if (existing.length === 0) {

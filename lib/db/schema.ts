@@ -24,7 +24,9 @@ export const patients = pgTable('patients', {
   email: text('email').notNull().unique(),
   dateOfBirth: date('date_of_birth').notNull(),
   phone: text('phone'),
-  allowEmergencyAccess: boolean('allow_emergency_access').default(false).notNull(),
+  allowEmergencyAccess: boolean('allow_emergency_access')
+    .default(false)
+    .notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })

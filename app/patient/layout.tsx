@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Loader2,
   LogOut,
+  Settings,
   Users,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -34,6 +35,7 @@ const navItems = [
   { href: '/patient/providers', label: 'My Providers', icon: Users },
   { href: '/patient/tokens', label: 'Share Tokens', icon: Key },
   { href: '/patient/access-logs', label: 'Access Logs', icon: FileText },
+  { href: '/patient/settings', label: 'Settings', icon: Settings },
 ]
 
 export default function PatientDashboardLayout({

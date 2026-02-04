@@ -32,6 +32,7 @@ interface AccessLogEntry {
   accessMethod?: string | null
   scope?: string[] | null
   accessedAt: string
+  isEmergencyAccess?: boolean
 }
 
 interface AccessLogsProps {
@@ -240,9 +241,19 @@ export function AccessLogs({ patientId }: AccessLogsProps) {
                     </span>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={getMethodVariant(log.accessMethod)}>
-                      {log.accessMethod?.toUpperCase() || 'Unknown'}
-                    </Badge>
+                    <div className="flex items-center gap-1">
+                      <Badge variant={getMethodVariant(log.accessMethod)}>
+                        {log.accessMethod?.toUpperCase() || 'Unknown'}
+                      </Badge>
+                      {log.isEmergencyAccess && (
+                        <Badge
+                          variant="outline"
+                          className="border-amber-500 text-amber-600"
+                        >
+                          Emergency
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
