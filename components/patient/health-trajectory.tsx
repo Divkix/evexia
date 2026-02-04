@@ -146,12 +146,14 @@ function PredictionCard({ prediction }: { prediction: Prediction }) {
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Risk Probability</span>
-            <span className="font-medium">{prediction.probability}%</span>
+            <span className="font-medium">
+              {Math.round(prediction.probability * 100)}%
+            </span>
           </div>
           <div className="relative h-3 w-full overflow-hidden rounded-full bg-primary/20">
             <div
               className={`h-full rounded-full ${riskConfig.progressColor} transition-all`}
-              style={{ width: `${prediction.probability}%` }}
+              style={{ width: `${prediction.probability * 100}%` }}
             />
           </div>
           <div className="flex justify-between text-xs text-muted-foreground">
