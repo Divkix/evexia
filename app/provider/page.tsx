@@ -691,12 +691,12 @@ export default function ProviderPortalPage() {
                     <Input
                       id="otpCode"
                       type="text"
-                      placeholder="Enter 6-digit code..."
+                      placeholder="Enter 8-digit code..."
                       value={otpCode}
                       onChange={(e) => setOtpCode(e.target.value)}
                       disabled={isLoading}
                       required
-                      maxLength={6}
+                      maxLength={8}
                       className="text-center text-lg tracking-widest"
                       autoComplete="one-time-code"
                     />

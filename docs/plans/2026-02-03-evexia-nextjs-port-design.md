@@ -166,7 +166,7 @@ Port the Evexia medical data aggregation platform from Python/FastAPI to Next.js
 5. "Send verification code" button
    │
    ▼
-6. Supabase sends 6-digit OTP to email
+6. Supabase sends 8-digit OTP to email
    │
    ▼
 7. Patient enters code (same page, no redirect)
