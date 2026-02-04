@@ -33,8 +33,11 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Check if auth bypass is enabled for local development
-  const bypassAuth = process.env.BYPASS_AUTH_LOCAL === 'true'
+  // SECURITY: Auth bypass is ONLY allowed in development
+  // Explicit NODE_ENV check as defense-in-depth
+  const bypassAuth =
+    process.env.NODE_ENV !== 'production' &&
+    process.env.BYPASS_AUTH_LOCAL === 'true'
 
   // Protected routes that require authentication
   const isProtectedRoute =

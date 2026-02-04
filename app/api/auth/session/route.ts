@@ -11,8 +11,10 @@ const DEMO_PATIENT_ID = process.env.DEMO_PATIENT_ID
 
 export async function GET() {
   try {
-    // Check for auth bypass in development
-    if (env.dev.bypassAuth() && DEMO_PATIENT_ID) {
+    // SECURITY: Auth bypass is ONLY allowed in development
+    // Explicit NODE_ENV check as defense-in-depth against env.dev.bypassAuth() bugs
+    const isProduction = process.env.NODE_ENV === 'production'
+    if (!isProduction && env.dev.bypassAuth() && DEMO_PATIENT_ID) {
       const patient = await getPatientById(DEMO_PATIENT_ID)
       if (patient) {
         return NextResponse.json({

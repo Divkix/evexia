@@ -25,7 +25,14 @@ export const env = {
     enabled: () => process.env.AI_ENABLED === 'true',
   },
   dev: {
-    bypassAuth: () => process.env.BYPASS_AUTH_LOCAL === 'true',
+    /**
+     * Auth bypass is ONLY allowed in non-production environments.
+     * This is a safety check to prevent BYPASS_AUTH_LOCAL from being
+     * accidentally enabled in production builds.
+     */
+    bypassAuth: () =>
+      process.env.NODE_ENV !== 'production' &&
+      process.env.BYPASS_AUTH_LOCAL === 'true',
   },
 }
 
