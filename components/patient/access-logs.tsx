@@ -163,7 +163,7 @@ export function AccessLogs({ patientId }: AccessLogsProps) {
       }
 
       const data = await response.json()
-      setLogs(data)
+      setLogs(data.logs ?? [])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
