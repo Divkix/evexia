@@ -8,8 +8,9 @@ export interface LogAccessData {
   providerOrg?: string
   ipAddress?: string
   userAgent?: string
-  accessMethod: 'employee_id' | 'token' | 'otp'
+  accessMethod: 'employee_id' | 'token' | 'otp' | 'emergency'
   scope: string[]
+  isEmergencyAccess?: boolean
 }
 
 // CamelCase type matching Drizzle schema
@@ -23,6 +24,7 @@ export interface AccessLog {
   userAgent: string | null
   accessMethod: string | null
   scope: string[] | null
+  isEmergencyAccess: boolean
   accessedAt: string
 }
 
@@ -42,6 +44,7 @@ export async function logAccess(data: LogAccessData): Promise<AccessLog> {
     user_agent: data.userAgent ?? null,
     access_method: data.accessMethod,
     scope: data.scope,
+    is_emergency_access: data.isEmergencyAccess ?? false,
   }
 
   const { data: log, error } = await supabase

@@ -9,6 +9,7 @@ export interface Patient {
   email: string
   dateOfBirth: string
   phone: string | null
+  allowEmergencyAccess: boolean
   createdAt: string
   updatedAt: string
 }
@@ -113,6 +114,8 @@ export async function updatePatient(
     updateData.date_of_birth = data.dateOfBirth
   if (data.phone !== undefined) updateData.phone = data.phone
   if (data.authUserId !== undefined) updateData.auth_user_id = data.authUserId
+  if (data.allowEmergencyAccess !== undefined)
+    updateData.allow_emergency_access = data.allowEmergencyAccess
 
   const { data: patient, error } = await supabase
     .from('patients')
@@ -139,4 +142,49 @@ export function maskEmail(email: string): string {
   const maskedDomain = `${domainName?.[0]}***.${tld}`
 
   return `${maskedLocal}@${maskedDomain}`
+}
+
+export async function updatePatientEmergencyAccess(
+  id: string,
+  allowEmergencyAccess: boolean,
+): Promise<Patient | null> {
+  const supabase = createAdminClient()
+
+  const { data, error } = await supabase
+    .from('patients')
+    .update({
+      allow_emergency_access: allowEmergencyAccess,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') return null // Not found
+    throw error
+  }
+
+  return toCamelCase<Patient>(data)
+}
+
+export async function getPatientEmergencyAccess(
+  id: string,
+): Promise<boolean | null> {
+  const supabase = createAdminClient()
+
+  const { data, error } = await supabase
+    .from('patients')
+    .select()
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') return null // Not found
+    throw error
+  }
+
+  // Type assertion for new column not yet in Supabase generated types
+  const patient = data as unknown as { allow_emergency_access: boolean }
+  return patient?.allow_emergency_access ?? false
 }

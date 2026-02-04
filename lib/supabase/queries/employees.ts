@@ -11,6 +11,7 @@ export interface Employee {
   email: string | null
   department: string | null
   isActive: boolean
+  isEmergencyStaff: boolean
   createdAt: string
 }
 
@@ -121,6 +122,33 @@ export async function getEmployeeById(id: string): Promise<Employee | null> {
     .from('employees')
     .select()
     .eq('id', id)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') return null // Not found
+    throw error
+  }
+
+  return toCamelCase<Employee>(data)
+}
+
+/**
+ * Get emergency staff by employeeId and organizationId
+ * Returns employee only if isEmergencyStaff=true AND isActive=true
+ */
+export async function getEmergencyStaffByEmployeeId(
+  employeeId: string,
+  organizationId: string,
+): Promise<Employee | null> {
+  const supabase = createAdminClient()
+
+  const { data, error } = await supabase
+    .from('employees')
+    .select()
+    .eq('employee_id', employeeId)
+    .eq('organization_id', organizationId)
+    .eq('is_active', true)
+    .eq('is_emergency_staff', true)
     .single()
 
   if (error) {

@@ -24,6 +24,7 @@ export const patients = pgTable('patients', {
   email: text('email').notNull().unique(),
   dateOfBirth: date('date_of_birth').notNull(),
   phone: text('phone'),
+  allowEmergencyAccess: boolean('allow_emergency_access').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
@@ -93,8 +94,9 @@ export const accessLogs = pgTable('access_logs', {
   providerOrg: text('provider_org'),
   ipAddress: text('ip_address'),
   userAgent: text('user_agent'),
-  accessMethod: text('access_method'), // 'employee_id' or 'token'
+  accessMethod: text('access_method'), // 'employee_id', 'token', 'otp', or 'emergency'
   scope: text('scope').array(),
+  isEmergencyAccess: boolean('is_emergency_access').default(false).notNull(),
   accessedAt: timestamp('accessed_at').defaultNow().notNull(),
 })
 
@@ -110,6 +112,7 @@ export const employees = pgTable(
     email: text('email'),
     department: text('department'),
     isActive: boolean('is_active').default(true).notNull(),
+    isEmergencyStaff: boolean('is_emergency_staff').default(false).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => [
