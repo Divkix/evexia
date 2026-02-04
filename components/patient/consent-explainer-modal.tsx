@@ -166,7 +166,7 @@ export function ConsentExplainerModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -180,7 +180,7 @@ export function ConsentExplainerModal({
 
         <div className="grid gap-6 py-4">
           {/* Selection and Preview Grid */}
-          <div className="grid gap-6 md:grid-cols-[1fr_auto_1fr]">
+          <div className="grid gap-6 md:grid-cols-[280px_auto_1fr]">
             {/* Left Column: Record Type Selection */}
             <div className="space-y-4">
               <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
@@ -280,20 +280,15 @@ export function ConsentExplainerModal({
                       What They'll See
                     </h4>
                     <ul className="space-y-1">
-                      {explanation.sharedData.slice(0, 5).map((item, i) => (
+                      {explanation.sharedData.map((item, i) => (
                         <li
                           key={`shared-${i}`}
                           className="text-xs text-muted-foreground flex items-start gap-2"
                         >
-                          <span className="text-primary mt-1">-</span>
-                          {item}
+                          <span className="text-primary mt-0.5">•</span>
+                          <span>{item}</span>
                         </li>
                       ))}
-                      {explanation.sharedData.length > 5 && (
-                        <li className="text-xs text-muted-foreground italic">
-                          +{explanation.sharedData.length - 5} more items
-                        </li>
-                      )}
                     </ul>
                   </div>
 
@@ -307,22 +302,15 @@ export function ConsentExplainerModal({
                       What They Can Infer
                     </h4>
                     <div className="flex flex-wrap gap-1.5">
-                      {explanation.inferredConditions
-                        .slice(0, 6)
-                        .map((item, i) => (
-                          <Badge
-                            key={`inferred-${i}`}
-                            variant="secondary"
-                            className="text-xs"
-                          >
-                            {item}
-                          </Badge>
-                        ))}
-                      {explanation.inferredConditions.length > 6 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{explanation.inferredConditions.length - 6} more
+                      {explanation.inferredConditions.map((item, i) => (
+                        <Badge
+                          key={`inferred-${i}`}
+                          variant="secondary"
+                          className="text-xs whitespace-normal text-left"
+                        >
+                          {item}
                         </Badge>
-                      )}
+                      ))}
                     </div>
                   </div>
 
