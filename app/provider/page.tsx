@@ -301,214 +301,231 @@ export default function ProviderPortalPage() {
     const groupedRecords = groupRecordsByCategory(accessData.records)
 
     return (
-      <div className="container mx-auto max-w-6xl px-4 py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Patient Records</h1>
-            <p className="text-muted-foreground">
-              Viewing records for {accessData.patientName}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={handleNewAccess} variant="outline">
-              View Different Patient
-            </Button>
-            <Link href="/">
-              <Button variant="ghost">
-                <Home className="mr-2 h-4 w-4" aria-hidden="true" />
-                Exit Portal
-              </Button>
-            </Link>
-          </div>
-        </div>
-
-        {/* Patient Info Card */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Patient Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2">
+      <div className="min-h-screen border-t-4 border-slate-500 bg-slate-50/30">
+        <div className="container mx-auto max-w-6xl px-4 py-8">
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
               <div>
-                <p className="text-sm text-muted-foreground">Name</p>
-                <p className="font-medium">{accessData.patientName}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Date of Birth</p>
-                <p className="font-medium">{accessData.dateOfBirth}</p>
-              </div>
-            </div>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Accessing Provider
-                </p>
-                <p className="font-medium">{accessData.providerName}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Organization</p>
-                <p className="font-medium">{accessData.providerOrg}</p>
-              </div>
-            </div>
-            <div className="mt-4">
-              <p className="mb-2 text-sm text-muted-foreground">Access Scope</p>
-              <div className="flex flex-wrap gap-2">
-                {accessData.scope.map((scope) => (
-                  <Badge key={scope} variant="secondary">
-                    {getCategoryLabel(scope)}
+                <div className="flex items-center gap-2">
+                  <h1 className="text-3xl font-bold">Patient Records</h1>
+                  <Badge
+                    variant="secondary"
+                    className="bg-slate-200 text-slate-700"
+                  >
+                    Provider Portal
                   </Badge>
-                ))}
+                </div>
+                <p className="text-muted-foreground">
+                  Viewing records for {accessData.patientName}
+                </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex gap-2">
+              <Button onClick={handleNewAccess} variant="outline">
+                View Different Patient
+              </Button>
+              <Link href="/">
+                <Button variant="ghost">
+                  <Home className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Exit Portal
+                </Button>
+              </Link>
+            </div>
+          </div>
 
-        {/* Summary Section */}
-        {accessData.summary && (
-          <div className="mb-6 space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Clinical Summary</CardTitle>
-                <CardDescription>
-                  AI-generated summary for healthcare providers
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="whitespace-pre-line text-sm leading-relaxed">
-                  {accessData.summary.clinicianSummary}
+          {/* Patient Info Card */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Patient Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-sm text-muted-foreground">Name</p>
+                  <p className="font-medium">{accessData.patientName}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Date of Birth</p>
+                  <p className="font-medium">{accessData.dateOfBirth}</p>
+                </div>
+              </div>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Accessing Provider
+                  </p>
+                  <p className="font-medium">{accessData.providerName}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Organization</p>
+                  <p className="font-medium">{accessData.providerOrg}</p>
+                </div>
+              </div>
+              <div className="mt-4">
+                <p className="mb-2 text-sm text-muted-foreground">
+                  Access Scope
                 </p>
-              </CardContent>
-            </Card>
-
-            {accessData.summary.anomalies &&
-              accessData.summary.anomalies.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <AlertTriangle
-                        className="h-5 w-5 text-warning"
-                        aria-hidden="true"
-                      />
-                      Detected Anomalies
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {accessData.summary.anomalies.map((anomaly, index) => (
-                        <Badge
-                          key={`${anomaly.type}-${index}`}
-                          variant={
-                            anomaly.severity === 'critical' ||
-                            anomaly.severity === 'high'
-                              ? 'destructive'
-                              : 'secondary'
-                          }
-                        >
-                          {anomaly.type}
-                          {anomaly.value && (
-                            <span className="ml-1 opacity-80">
-                              ({anomaly.value})
-                            </span>
-                          )}
-                        </Badge>
-                      ))}
-                    </div>
-                    <ul className="mt-4 space-y-2 text-sm">
-                      {accessData.summary.anomalies.map((anomaly, index) => (
-                        <li
-                          key={`detail-${anomaly.type}-${index}`}
-                          className="flex items-start gap-2"
-                        >
-                          <span
-                            className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
-                              anomaly.severity === 'critical' ||
-                              anomaly.severity === 'high'
-                                ? 'bg-destructive'
-                                : 'bg-warning'
-                            }`}
-                          />
-                          <span>{anomaly.message}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              )}
-          </div>
-        )}
-
-        {/* Health Charts */}
-        {accessData.chartData && (
-          <div className="mb-6">
-            <h2 className="mb-4 text-xl font-semibold">Health Trends</h2>
-            <HealthCharts chartData={accessData.chartData} />
-          </div>
-        )}
-
-        {/* Medical Records by Category */}
-        <div className="mb-6 space-y-4">
-          <h2 className="text-xl font-semibold">Medical Records</h2>
-          {Object.entries(groupedRecords).map(([category, records]) => (
-            <Card key={category}>
-              <CardHeader>
-                <CardTitle className="text-lg">
-                  {getCategoryLabel(category)}
-                </CardTitle>
-                <CardDescription>
-                  {records.length} record{records.length !== 1 ? 's' : ''}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {records.map((record) => (
-                    <div
-                      key={record.id}
-                      className="rounded-lg border bg-muted/30 p-3"
-                    >
-                      <div className="mb-1 flex items-center justify-between">
-                        <span className="text-sm font-medium">
-                          {record.hospital}
-                        </span>
-                        {record.recordDate && (
-                          <span className="text-xs text-muted-foreground">
-                            {record.recordDate}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {formatRecordData(record.data)}
-                      </p>
-                    </div>
+                <div className="flex flex-wrap gap-2">
+                  {accessData.scope.map((scope) => (
+                    <Badge key={scope} variant="secondary">
+                      {getCategoryLabel(scope)}
+                    </Badge>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            </CardContent>
+          </Card>
 
-          {accessData.records.length === 0 && (
-            <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">
-                No records available for the granted scope.
-              </CardContent>
-            </Card>
+          {/* Summary Section */}
+          {accessData.summary && (
+            <div className="mb-6 space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Clinical Summary</CardTitle>
+                  <CardDescription>
+                    AI-generated summary for healthcare providers
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="whitespace-pre-line text-sm leading-relaxed">
+                    {accessData.summary.clinicianSummary}
+                  </p>
+                </CardContent>
+              </Card>
+
+              {accessData.summary.anomalies &&
+                accessData.summary.anomalies.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <AlertTriangle
+                          className="h-5 w-5 text-warning"
+                          aria-hidden="true"
+                        />
+                        Detected Anomalies
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        {accessData.summary.anomalies.map((anomaly, index) => (
+                          <Badge
+                            key={`${anomaly.type}-${index}`}
+                            variant={
+                              anomaly.severity === 'critical' ||
+                              anomaly.severity === 'high'
+                                ? 'destructive'
+                                : 'secondary'
+                            }
+                          >
+                            {anomaly.type}
+                            {anomaly.value && (
+                              <span className="ml-1 opacity-80">
+                                ({anomaly.value})
+                              </span>
+                            )}
+                          </Badge>
+                        ))}
+                      </div>
+                      <ul className="mt-4 space-y-2 text-sm">
+                        {accessData.summary.anomalies.map((anomaly, index) => (
+                          <li
+                            key={`detail-${anomaly.type}-${index}`}
+                            className="flex items-start gap-2"
+                          >
+                            <span
+                              className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
+                                anomaly.severity === 'critical' ||
+                                anomaly.severity === 'high'
+                                  ? 'bg-destructive'
+                                  : 'bg-warning'
+                              }`}
+                            />
+                            <span>{anomaly.message}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                )}
+            </div>
           )}
-        </div>
 
-        {/* Medical Disclaimer */}
-        <Alert>
-          <Info className="h-4 w-4" aria-hidden="true" />
-          <AlertTitle>Medical Disclaimer</AlertTitle>
-          <AlertDescription>{accessData.disclaimer}</AlertDescription>
-        </Alert>
+          {/* Health Charts */}
+          {accessData.chartData && (
+            <div className="mb-6">
+              <h2 className="mb-4 text-xl font-semibold">Health Trends</h2>
+              <HealthCharts chartData={accessData.chartData} />
+            </div>
+          )}
+
+          {/* Medical Records by Category */}
+          <div className="mb-6 space-y-4">
+            <h2 className="text-xl font-semibold">Medical Records</h2>
+            {Object.entries(groupedRecords).map(([category, records]) => (
+              <Card key={category}>
+                <CardHeader>
+                  <CardTitle className="text-lg">
+                    {getCategoryLabel(category)}
+                  </CardTitle>
+                  <CardDescription>
+                    {records.length} record{records.length !== 1 ? 's' : ''}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {records.map((record) => (
+                      <div
+                        key={record.id}
+                        className="rounded-lg border bg-muted/30 p-3"
+                      >
+                        <div className="mb-1 flex items-center justify-between">
+                          <span className="text-sm font-medium">
+                            {record.hospital}
+                          </span>
+                          {record.recordDate && (
+                            <span className="text-xs text-muted-foreground">
+                              {record.recordDate}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {formatRecordData(record.data)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {accessData.records.length === 0 && (
+              <Card>
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  No records available for the granted scope.
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Medical Disclaimer */}
+          <Alert>
+            <Info className="h-4 w-4" aria-hidden="true" />
+            <AlertTitle>Medical Disclaimer</AlertTitle>
+            <AlertDescription>{accessData.disclaimer}</AlertDescription>
+          </Alert>
+        </div>
       </div>
     )
   }
 
-  // Access request form with tabs
+  // Access request form with tabs - provider portal styling
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-muted/40 px-4 py-8">
-      <div className="mb-8">
+    <div className="flex min-h-screen flex-col items-center justify-center border-t-4 border-slate-500 bg-slate-100/50 px-4 py-8">
+      <div className="mb-8 flex flex-col items-center gap-2">
         <LogoWithText size={48} className="text-foreground" />
+        <Badge variant="secondary" className="bg-slate-200 text-slate-700">
+          Provider Portal
+        </Badge>
       </div>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
@@ -530,7 +547,10 @@ export default function ProviderPortalPage() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="token" className="mt-4">
+            <TabsContent
+              value="token"
+              className="mt-4 animate-in fade-in-0 duration-300"
+            >
               <form onSubmit={handleTokenAccess} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="token">Share Token</Label>
@@ -557,7 +577,7 @@ export default function ProviderPortalPage() {
                   ) : (
                     <select
                       id="tokenOrganization"
-                      className="flex h-9 w-full rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                       value={tokenOrganization}
                       onChange={(e) => setTokenOrganization(e.target.value)}
                       disabled={isLoading}
@@ -606,7 +626,10 @@ export default function ProviderPortalPage() {
               </form>
             </TabsContent>
 
-            <TabsContent value="otp" className="mt-4">
+            <TabsContent
+              value="otp"
+              className="mt-4 animate-in fade-in-0 duration-300"
+            >
               {otpStep === 'request' ? (
                 <form onSubmit={handleRequestOtp} className="space-y-4">
                   <div className="space-y-2">
@@ -634,7 +657,7 @@ export default function ProviderPortalPage() {
                     ) : (
                       <select
                         id="otpOrganization"
-                        className="flex h-9 w-full rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                         value={otpOrganization}
                         onChange={(e) => setOtpOrganization(e.target.value)}
                         disabled={isLoading}
@@ -739,7 +762,7 @@ export default function ProviderPortalPage() {
               href="/"
               className="text-sm text-muted-foreground hover:text-foreground"
             >
-              ← Back to Home
+              Back to Home
             </Link>
           </div>
         </CardContent>

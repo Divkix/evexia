@@ -1,9 +1,9 @@
 'use client'
 
 import {
+  Area,
+  AreaChart,
   CartesianGrid,
-  Line,
-  LineChart,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -33,10 +33,17 @@ interface HealthChartsProps {
   chartData: ChartData
 }
 
-// Theme colors from globals.css
-const DEEP_FOREST = 'hsl(160, 35%, 20%)'
-const SAGE = 'hsl(140, 20%, 75%)'
-const MUTED_FOREGROUND = 'hsl(220, 10%, 40%)'
+// CSS variable references for chart colors
+const CHART_COLORS = {
+  chart1: { stroke: 'var(--chart-1)', fill: 'hsl(160, 35%, 30%)' }, // Forest green - BMI
+  chart2: { stroke: 'var(--chart-2)', fill: 'hsl(140, 25%, 45%)' }, // Sage variant - Cholesterol
+  chart3: { stroke: 'var(--chart-3)', fill: 'hsl(45, 35%, 50%)' }, // Muted gold - A1C
+}
+const REFERENCE_LINE_COLOR = 'var(--accent)'
+const MUTED_FOREGROUND = 'var(--muted-foreground)'
+const GRID_COLOR = 'var(--border)'
+const TOOLTIP_BG = 'var(--card)'
+const TOOLTIP_BORDER = 'var(--border)'
 
 interface SingleChartProps {
   title: string
@@ -45,6 +52,8 @@ interface SingleChartProps {
   referenceLines: { value: number; label: string }[]
   yAxisDomain?: [number, number]
   unit?: string
+  chartColor: { stroke: string; fill: string }
+  gradientId: string
 }
 
 function SingleChart({
@@ -54,6 +63,8 @@ function SingleChart({
   referenceLines,
   yAxisDomain,
   unit = '',
+  chartColor,
+  gradientId,
 }: SingleChartProps) {
   if (data.length === 0) {
     return (
@@ -79,11 +90,25 @@ function SingleChart({
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={200}>
-          <LineChart
+          <AreaChart
             data={data}
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(160, 15%, 85%)" />
+            <defs>
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                <stop
+                  offset="0%"
+                  stopColor={chartColor.fill}
+                  stopOpacity={0.4}
+                />
+                <stop
+                  offset="100%"
+                  stopColor={chartColor.fill}
+                  stopOpacity={0}
+                />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} />
             <XAxis
               dataKey="date"
               tick={{ fontSize: 12, fill: MUTED_FOREGROUND }}
@@ -99,8 +124,8 @@ function SingleChart({
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: 'hsl(45, 25%, 98%)',
-                border: '1px solid hsl(160, 15%, 80%)',
+                backgroundColor: TOOLTIP_BG,
+                border: `1px solid ${TOOLTIP_BORDER}`,
                 borderRadius: '0.5rem',
                 fontSize: '0.875rem',
               }}
@@ -113,7 +138,7 @@ function SingleChart({
               <ReferenceLine
                 key={ref.value}
                 y={ref.value}
-                stroke={SAGE}
+                stroke={REFERENCE_LINE_COLOR}
                 strokeDasharray="5 5"
                 label={{
                   value: ref.label,
@@ -123,15 +148,19 @@ function SingleChart({
                 }}
               />
             ))}
-            <Line
+            <Area
               type="monotone"
               dataKey="value"
-              stroke={DEEP_FOREST}
+              stroke={chartColor.stroke}
               strokeWidth={2}
-              dot={{ fill: DEEP_FOREST, strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, fill: DEEP_FOREST }}
+              fill={`url(#${gradientId})`}
+              dot={{ fill: chartColor.stroke, strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6, fill: chartColor.stroke }}
+              isAnimationActive={true}
+              animationDuration={800}
+              animationEasing="ease-out"
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
@@ -163,6 +192,8 @@ export function HealthCharts({ chartData }: HealthChartsProps) {
         data={chartData.bmi}
         referenceLines={bmiReferenceLines}
         yAxisDomain={[15, 40]}
+        chartColor={CHART_COLORS.chart1}
+        gradientId="bmiGradient"
       />
       <SingleChart
         title="Total Cholesterol"
@@ -171,6 +202,8 @@ export function HealthCharts({ chartData }: HealthChartsProps) {
         referenceLines={cholesterolReferenceLines}
         yAxisDomain={[100, 300]}
         unit=" mg/dL"
+        chartColor={CHART_COLORS.chart2}
+        gradientId="cholesterolGradient"
       />
       <SingleChart
         title="A1C"
@@ -179,6 +212,8 @@ export function HealthCharts({ chartData }: HealthChartsProps) {
         referenceLines={a1cReferenceLines}
         yAxisDomain={[4, 10]}
         unit="%"
+        chartColor={CHART_COLORS.chart3}
+        gradientId="a1cGradient"
       />
     </div>
   )

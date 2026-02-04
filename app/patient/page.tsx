@@ -72,9 +72,22 @@ const CHART_SKELETON_KEYS = ['chart-1', 'chart-2', 'chart-3'] as const
 function DashboardSkeleton() {
   return (
     <div className="space-y-6">
-      {/* Quick Stats Skeleton */}
+      {/* Quick Stats Skeleton - bento layout */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {STAT_SKELETON_KEYS.map((key) => (
+        {/* Hero stat skeleton (spans 2 cols on lg) */}
+        <div className="sm:col-span-2 lg:col-span-2 lg:row-span-2">
+          <Card className="h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <Skeleton className="h-5 w-28" />
+              <Skeleton className="size-5" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-16 w-24" />
+              <Skeleton className="mt-2 h-4 w-40" />
+            </CardContent>
+          </Card>
+        </div>
+        {STAT_SKELETON_KEYS.slice(1).map((key) => (
           <Card key={key}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <Skeleton className="h-4 w-24" />
@@ -241,25 +254,27 @@ export default function PatientDashboardPage() {
         </p>
       </div>
 
-      {/* Quick Stats */}
+      {/* Quick Stats - Bento Grid Layout */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        {/* Hero Stat: Total Records - spans 2 columns on lg */}
+        <Card className="card-hover sm:col-span-2 lg:col-span-2 lg:row-span-2 bg-gradient-to-br from-primary/5 via-card to-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Records</CardTitle>
-            <FileText
-              className="size-4 text-muted-foreground"
-              aria-hidden="true"
-            />
+            <CardTitle className="text-base font-medium">
+              Total Records
+            </CardTitle>
+            <FileText className="size-5 text-primary" aria-hidden="true" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalRecords}</div>
-            <p className="text-xs text-muted-foreground">
-              Medical records on file
+            <div className="text-5xl font-bold text-primary lg:text-6xl">
+              {totalRecords}
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Medical records on file across all providers
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-hover">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Healthcare Providers
@@ -275,7 +290,7 @@ export default function PatientDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-hover">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Record Types</CardTitle>
             <Activity
@@ -291,7 +306,7 @@ export default function PatientDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-hover sm:col-span-2 lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Last Updated</CardTitle>
             <Calendar
@@ -309,7 +324,7 @@ export default function PatientDashboardPage() {
       {/* Health Charts */}
       {chartData && <HealthCharts chartData={chartData} />}
 
-      {/* Health Summary */}
+      {/* Health Summary - Full width */}
       <HealthSummary patientId={patientId} />
     </div>
   )

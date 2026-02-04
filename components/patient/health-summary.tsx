@@ -218,9 +218,7 @@ export function HealthSummary({ patientId }: HealthSummaryProps) {
       {/* Clinician Summary */}
       <Card>
         <CardHeader>
-          <CardTitle className="font-display text-xl">
-            Clinical Summary
-          </CardTitle>
+          <CardTitle className="font-serif text-xl">Clinical Summary</CardTitle>
           <CardDescription>
             Key findings for healthcare providers
           </CardDescription>
@@ -246,7 +244,7 @@ export function HealthSummary({ patientId }: HealthSummaryProps) {
       {/* Patient-Friendly Summary */}
       <Card>
         <CardHeader>
-          <CardTitle className="font-display text-xl">
+          <CardTitle className="font-serif text-xl">
             Your Health Summary
           </CardTitle>
           <CardDescription>
@@ -269,7 +267,7 @@ export function HealthSummary({ patientId }: HealthSummaryProps) {
       {hasAnomalies && (
         <Card>
           <CardHeader>
-            <CardTitle className="font-display text-xl flex items-center gap-2">
+            <CardTitle className="font-serif text-xl flex items-center gap-2">
               <AlertTriangle
                 className="h-5 w-5 text-warning"
                 aria-hidden="true"

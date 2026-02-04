@@ -147,9 +147,11 @@ export default function PatientDashboardLayout({
                 key={item.href}
                 variant={isActive ? 'secondary' : 'ghost'}
                 className={cn(
-                  'w-full justify-start gap-3',
+                  'relative w-full justify-start gap-3',
                   isActive &&
                     'bg-sidebar-accent text-sidebar-accent-foreground',
+                  isActive &&
+                    'before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-6 before:w-1 before:rounded-full before:bg-primary',
                 )}
                 asChild
               >

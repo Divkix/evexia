@@ -98,20 +98,19 @@ function getStatusBadgeVariant(
   }
 }
 
-function getScopeVariant(
-  scope: string,
-): 'default' | 'secondary' | 'outline' | 'destructive' {
+function getScopeStyles(scope: string): string {
+  // Use semantic scope colors from CSS variables
   switch (scope.toLowerCase()) {
     case 'vitals':
-      return 'default'
+      return 'bg-[hsl(var(--scope-vitals))] text-white border-transparent'
     case 'labs':
-      return 'secondary'
+      return 'bg-[hsl(var(--scope-labs))] text-white border-transparent'
     case 'medications':
-      return 'outline'
+      return 'bg-[hsl(var(--scope-medications))] text-black border-transparent'
     case 'encounters':
-      return 'destructive'
+      return 'bg-[hsl(var(--scope-encounters))] text-white border-transparent'
     default:
-      return 'secondary'
+      return ''
   }
 }
 
@@ -417,7 +416,7 @@ export function TokenManager({ patientId }: TokenManagerProps) {
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
                             {token.scope.map((s) => (
-                              <Badge key={s} variant={getScopeVariant(s)}>
+                              <Badge key={s} className={getScopeStyles(s)}>
                                 {s}
                               </Badge>
                             ))}

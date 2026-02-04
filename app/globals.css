@@ -90,6 +90,21 @@
   --chart-4: hsl(10 30% 60%); /* Muted Rose variant */
   --chart-5: hsl(200 20% 45%); /* Slate blue for contrast */
 
+  /* Accent gold */
+  --accent-gold: 35 45% 55%;
+
+  /* Scope badge colors (raw HSL values for composability) */
+  --scope-vitals: 210 80% 55%; /* Blue */
+  --scope-labs: 160 60% 45%; /* Emerald */
+  --scope-medications: 35 80% 55%; /* Amber */
+  --scope-encounters: 180 50% 45%; /* Teal */
+
+  /* Animation timing scale */
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
   /* Sidebar */
   --sidebar: hsl(45 25% 98%);
   --sidebar-foreground: hsl(220 10% 25%);
@@ -133,6 +148,15 @@
   --chart-4: hsl(10 35% 60%);
   --chart-5: hsl(200 25% 55%);
 
+  /* Accent gold - dark mode */
+  --accent-gold: 35 50% 60%;
+
+  /* Scope badge colors - dark mode (slightly brighter for contrast) */
+  --scope-vitals: 210 80% 60%; /* Blue */
+  --scope-labs: 160 60% 50%; /* Emerald */
+  --scope-medications: 35 80% 60%; /* Amber */
+  --scope-encounters: 180 50% 50%; /* Teal */
+
   --sidebar: hsl(220 10% 15%);
   --sidebar-foreground: hsl(45 20% 90%);
   --sidebar-primary: hsl(160 30% 50%);
@@ -169,7 +193,7 @@
 
   .card-hover:hover {
     @apply -translate-y-0.5;
-    box-shadow: 0 4px 12px hsl(160 35% 20% / 0.08);
+    box-shadow: 0 4px 12px hsl(var(--primary) / 0.08);
   }
 
   /* Gold accent underline for headings */
@@ -178,7 +202,7 @@
     display: block;
     width: 40px;
     height: 2px;
-    background: hsl(35 45% 55%);
+    background: hsl(var(--accent-gold));
     margin-top: 0.5rem;
   }
 
@@ -187,5 +211,23 @@
   h2,
   h3 {
     font-family: var(--font-fraunces), ui-serif, Georgia, serif;
+  }
+}
+
+/* Shimmer animation for skeleton loading */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
