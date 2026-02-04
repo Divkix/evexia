@@ -18,6 +18,7 @@
     "db:seed": "bun run scripts/seed.ts",
     "cf:build": "opennextjs-cloudflare build",
     "cf:deploy": "wrangler deploy",
+    "deploy": "bun run cf:build && bun run cf:deploy",
     "preview": "bunx opennextjs-cloudflare build && bunx opennextjs-cloudflare preview"
   },
   "dependencies": {
