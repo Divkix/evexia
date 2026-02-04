@@ -5,8 +5,17 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core'
+
+export const organizations = pgTable('organizations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  slug: text('slug').notNull().unique(),
+  name: text('name').notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
 
 export const patients = pgTable('patients', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -89,18 +98,31 @@ export const accessLogs = pgTable('access_logs', {
   accessedAt: timestamp('accessed_at').defaultNow().notNull(),
 })
 
-export const employees = pgTable('employees', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  employeeId: text('employee_id').notNull().unique(), // e.g., "EMP-001"
-  name: text('name').notNull(),
-  organization: text('organization').notNull(),
-  email: text('email'),
-  department: text('department'),
-  isActive: boolean('is_active').default(true).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-})
+export const employees = pgTable(
+  'employees',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    employeeId: text('employee_id').notNull(),
+    name: text('name').notNull(),
+    email: text('email'),
+    department: text('department'),
+    isActive: boolean('is_active').default(true).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex('employees_org_employee_id_unique').on(
+      table.organizationId,
+      table.employeeId,
+    ),
+  ],
+)
 
 // Type exports
+export type Organization = typeof organizations.$inferSelect
+export type NewOrganization = typeof organizations.$inferInsert
 export type Patient = typeof patients.$inferSelect
 export type NewPatient = typeof patients.$inferInsert
 export type Record = typeof records.$inferSelect

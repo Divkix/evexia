@@ -267,9 +267,9 @@ export type Database = {
       employees: {
         Row: {
           id: string
+          organization_id: string
           employee_id: string
           name: string
-          organization: string
           email: string | null
           department: string | null
           is_active: boolean
@@ -277,9 +277,9 @@ export type Database = {
         }
         Insert: {
           id?: string
+          organization_id: string
           employee_id: string
           name: string
-          organization: string
           email?: string | null
           department?: string | null
           is_active?: boolean
@@ -287,11 +287,43 @@ export type Database = {
         }
         Update: {
           id?: string
+          organization_id?: string
           employee_id?: string
           name?: string
-          organization?: string
           email?: string | null
           department?: string | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'employees_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          id: string
+          slug: string
+          name: string
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          name: string
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          slug?: string
+          name?: string
           is_active?: boolean
           created_at?: string
         }
@@ -347,3 +379,9 @@ export type UpdateAccessLog =
 export type Employee = Database['public']['Tables']['employees']['Row']
 export type NewEmployee = Database['public']['Tables']['employees']['Insert']
 export type UpdateEmployee = Database['public']['Tables']['employees']['Update']
+
+export type Organization = Database['public']['Tables']['organizations']['Row']
+export type NewOrganization =
+  Database['public']['Tables']['organizations']['Insert']
+export type UpdateOrganization =
+  Database['public']['Tables']['organizations']['Update']

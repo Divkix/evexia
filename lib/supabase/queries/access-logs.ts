@@ -6,6 +6,7 @@ export interface LogAccessData {
   patientId: string
   providerName?: string
   providerOrg?: string
+  organizationId?: string
   ipAddress?: string
   userAgent?: string
   accessMethod: 'employee_id' | 'token' | 'otp'
@@ -33,18 +34,26 @@ export interface AccessLogWithToken extends AccessLog {
 export async function logAccess(data: LogAccessData): Promise<AccessLog> {
   const supabase = createAdminClient()
 
+  const insertData: Record<string, unknown> = {
+    token_id: data.tokenId ?? null,
+    patient_id: data.patientId,
+    provider_name: data.providerName ?? null,
+    provider_org: data.providerOrg ?? null,
+    ip_address: data.ipAddress ?? null,
+    user_agent: data.userAgent ?? null,
+    access_method: data.accessMethod,
+    scope: data.scope,
+  }
+
+  // Add organizationId if provided (for multi-tenant queries)
+  if (data.organizationId) {
+    insertData.organization_id = data.organizationId
+  }
+
   const { data: log, error } = await supabase
     .from('access_logs')
-    .insert({
-      token_id: data.tokenId ?? null,
-      patient_id: data.patientId,
-      provider_name: data.providerName ?? null,
-      provider_org: data.providerOrg ?? null,
-      ip_address: data.ipAddress ?? null,
-      user_agent: data.userAgent ?? null,
-      access_method: data.accessMethod,
-      scope: data.scope,
-    })
+    // biome-ignore lint/suspicious/noExplicitAny: dynamic insert based on schema
+    .insert(insertData as any)
     .select()
     .single()
 

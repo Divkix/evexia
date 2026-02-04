@@ -2,7 +2,7 @@
 
 import { AlertTriangle, Home, Info, Key, Mail } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { HealthCharts } from '@/components/patient/health-charts'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -18,6 +18,14 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
+interface Organization {
+  id: string
+  slug: string
+  name: string
+  isActive: boolean
+  createdAt: string
+}
 
 interface ChartDataPoint {
   date: string
@@ -84,6 +92,11 @@ export default function ProviderPortalPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [accessData, setAccessData] = useState<AccessResponse | null>(null)
 
+  // Organization state
+  const [organizations, setOrganizations] = useState<Organization[]>([])
+  const [tokenOrganization, setTokenOrganization] = useState('')
+  const [otpOrganization, setOtpOrganization] = useState('')
+
   // Token access form state
   const [token, setToken] = useState('')
   const [tokenEmployeeId, setTokenEmployeeId] = useState('')
@@ -95,10 +108,22 @@ export default function ProviderPortalPage() {
   const [otpStep, setOtpStep] = useState<OtpStep>('request')
   const [otpMaskedEmail, setOtpMaskedEmail] = useState('')
 
+  // Fetch organizations on mount
+  useEffect(() => {
+    fetch('/api/organizations')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setOrganizations(data.organizations)
+        }
+      })
+      .catch(console.error)
+  }, [])
+
   const handleTokenAccess = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (!token.trim() || !tokenEmployeeId.trim()) {
+    if (!token.trim() || !tokenEmployeeId.trim() || !tokenOrganization) {
       toast.error('Please fill in all required fields')
       return
     }
@@ -112,6 +137,7 @@ export default function ProviderPortalPage() {
         body: JSON.stringify({
           token: token.trim(),
           employeeId: tokenEmployeeId.trim(),
+          organizationSlug: tokenOrganization,
         }),
       })
 
@@ -134,7 +160,7 @@ export default function ProviderPortalPage() {
   const handleRequestOtp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (!otpPatientId.trim() || !otpEmployeeId.trim()) {
+    if (!otpPatientId.trim() || !otpEmployeeId.trim() || !otpOrganization) {
       toast.error('Please fill in all required fields')
       return
     }
@@ -149,6 +175,7 @@ export default function ProviderPortalPage() {
           action: 'request-otp',
           patientId: otpPatientId.trim(),
           employeeId: otpEmployeeId.trim(),
+          organizationSlug: otpOrganization,
         }),
       })
 
@@ -187,6 +214,7 @@ export default function ProviderPortalPage() {
           action: 'verify-otp',
           patientId: otpPatientId.trim(),
           employeeId: otpEmployeeId.trim(),
+          organizationSlug: otpOrganization,
           code: otpCode.trim(),
         }),
       })
@@ -217,8 +245,10 @@ export default function ProviderPortalPage() {
     setAccessData(null)
     setToken('')
     setTokenEmployeeId('')
+    setTokenOrganization('')
     setOtpPatientId('')
     setOtpEmployeeId('')
+    setOtpOrganization('')
     setOtpCode('')
     setOtpStep('request')
     setOtpMaskedEmail('')
@@ -503,6 +533,33 @@ export default function ProviderPortalPage() {
                   </p>
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="tokenOrganization">Organization</Label>
+                  {organizations.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No organizations configured
+                    </p>
+                  ) : (
+                    <select
+                      id="tokenOrganization"
+                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                      value={tokenOrganization}
+                      onChange={(e) => setTokenOrganization(e.target.value)}
+                      disabled={isLoading}
+                      required
+                    >
+                      <option value="">Select your organization</option>
+                      {organizations.map((org) => (
+                        <option key={org.id} value={org.slug}>
+                          {org.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Select your healthcare organization
+                  </p>
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="tokenEmployeeId">Employee ID</Label>
                   <Input
                     id="tokenEmployeeId"
@@ -539,6 +596,33 @@ export default function ProviderPortalPage() {
                     />
                     <p className="text-xs text-muted-foreground">
                       The patient&apos;s unique identifier in the system
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="otpOrganization">Organization</Label>
+                    {organizations.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        No organizations configured
+                      </p>
+                    ) : (
+                      <select
+                        id="otpOrganization"
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        value={otpOrganization}
+                        onChange={(e) => setOtpOrganization(e.target.value)}
+                        disabled={isLoading}
+                        required
+                      >
+                        <option value="">Select your organization</option>
+                        {organizations.map((org) => (
+                          <option key={org.id} value={org.slug}>
+                            {org.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Select your healthcare organization
                     </p>
                   </div>
                   <div className="space-y-2">

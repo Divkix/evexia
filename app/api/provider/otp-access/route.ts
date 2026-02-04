@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { MEDICAL_DISCLAIMER } from '@/lib/ai/prompts'
 import { logAccess } from '@/lib/supabase/queries/access-logs'
-import { getEmployeeByEmployeeId } from '@/lib/supabase/queries/employees'
+import { getEmployeeByEmployeeIdAndOrg } from '@/lib/supabase/queries/employees'
+import { getOrganizationBySlug } from '@/lib/supabase/queries/organizations'
 import { getPatientById, maskEmail } from '@/lib/supabase/queries/patients'
 import { getProviderByPatientAndEmployeeId } from '@/lib/supabase/queries/providers'
 import {
@@ -16,12 +17,14 @@ interface RequestOtpBody {
   action: 'request-otp'
   patientId: string
   employeeId: string
+  organizationSlug: string
 }
 
 interface VerifyOtpBody {
   action: 'verify-otp'
   patientId: string
   employeeId: string
+  organizationSlug: string
   code: string
 }
 
@@ -50,19 +53,31 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleRequestOtp(body: RequestOtpBody) {
-  const { patientId, employeeId } = body
+  const { patientId, employeeId, organizationSlug } = body
 
-  if (!patientId || !employeeId) {
+  if (!patientId || !employeeId || !organizationSlug) {
     return NextResponse.json(
-      { error: 'Patient ID and employee ID are required' },
+      { error: 'Patient ID, employee ID, and organization are required' },
       { status: 400 },
     )
   }
 
-  // Lookup employee
-  const employee = await getEmployeeByEmployeeId(employeeId)
+  // Validate organization
+  const organization = await getOrganizationBySlug(organizationSlug)
+  if (!organization) {
+    return NextResponse.json({ error: 'Invalid organization' }, { status: 403 })
+  }
+
+  // Lookup employee by employeeId and organizationId
+  const employee = await getEmployeeByEmployeeIdAndOrg(
+    employeeId,
+    organization.id,
+  )
   if (!employee) {
-    return NextResponse.json({ error: 'Invalid employee ID' }, { status: 403 })
+    return NextResponse.json(
+      { error: 'Invalid employee ID for this organization' },
+      { status: 403 },
+    )
   }
 
   // Find patient
@@ -108,24 +123,39 @@ async function handleRequestOtp(body: RequestOtpBody) {
     maskedEmail: maskEmail(patient.email),
     scope: provider.scope,
     providerName: employee.name,
-    providerOrg: employee.organization,
+    providerOrg: organization.name,
   })
 }
 
 async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
-  const { patientId, employeeId, code } = body
+  const { patientId, employeeId, organizationSlug, code } = body
 
-  if (!patientId || !employeeId || !code) {
+  if (!patientId || !employeeId || !organizationSlug || !code) {
     return NextResponse.json(
-      { error: 'Patient ID, employee ID, and verification code are required' },
+      {
+        error:
+          'Patient ID, employee ID, organization, and verification code are required',
+      },
       { status: 400 },
     )
   }
 
-  // Lookup employee
-  const employee = await getEmployeeByEmployeeId(employeeId)
+  // Validate organization
+  const organization = await getOrganizationBySlug(organizationSlug)
+  if (!organization) {
+    return NextResponse.json({ error: 'Invalid organization' }, { status: 403 })
+  }
+
+  // Lookup employee by employeeId and organizationId
+  const employee = await getEmployeeByEmployeeIdAndOrg(
+    employeeId,
+    organization.id,
+  )
   if (!employee) {
-    return NextResponse.json({ error: 'Invalid employee ID' }, { status: 403 })
+    return NextResponse.json(
+      { error: 'Invalid employee ID for this organization' },
+      { status: 403 },
+    )
   }
 
   // Find patient
@@ -171,7 +201,8 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
   await logAccess({
     patientId: patient.id,
     providerName: employee.name,
-    providerOrg: employee.organization,
+    providerOrg: organization.name,
+    organizationId: organization.id,
     ipAddress: ip,
     userAgent,
     accessMethod: 'otp',
@@ -201,7 +232,7 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
       : null,
     chartData,
     providerName: employee.name,
-    providerOrg: employee.organization,
+    providerOrg: organization.name,
     disclaimer: MEDICAL_DISCLAIMER,
   })
 }

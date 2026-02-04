@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { MEDICAL_DISCLAIMER } from '@/lib/ai/prompts'
 import { logAccess } from '@/lib/supabase/queries/access-logs'
-import { getEmployeeByEmployeeId } from '@/lib/supabase/queries/employees'
+import { getEmployeeByEmployeeIdAndOrg } from '@/lib/supabase/queries/employees'
+import { getOrganizationBySlug } from '@/lib/supabase/queries/organizations'
 import { getPatientById } from '@/lib/supabase/queries/patients'
 import type { RecordCategory } from '@/lib/supabase/queries/records'
 import { getPatientRecords } from '@/lib/supabase/queries/records'
@@ -12,17 +13,27 @@ import { extractChartData } from '@/lib/utils/medical'
 interface AccessRequestBody {
   token: string
   employeeId: string
+  organizationSlug: string
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as AccessRequestBody
-    const { token, employeeId } = body
+    const { token, employeeId, organizationSlug } = body
 
-    if (!token || !employeeId) {
+    if (!token || !employeeId || !organizationSlug) {
       return NextResponse.json(
-        { error: 'Token and employee ID are required' },
+        { error: 'Token, employee ID, and organization are required' },
         { status: 400 },
+      )
+    }
+
+    // Validate organization
+    const organization = await getOrganizationBySlug(organizationSlug)
+    if (!organization) {
+      return NextResponse.json(
+        { error: 'Invalid organization' },
+        { status: 403 },
       )
     }
 
@@ -35,11 +46,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Lookup employee by employeeId
-    const employee = await getEmployeeByEmployeeId(employeeId)
+    // Lookup employee by employeeId and organizationId
+    const employee = await getEmployeeByEmployeeIdAndOrg(
+      employeeId,
+      organization.id,
+    )
     if (!employee) {
       return NextResponse.json(
-        { error: 'Invalid employee ID' },
+        { error: 'Invalid employee ID for this organization' },
         { status: 403 },
       )
     }
@@ -61,7 +75,8 @@ export async function POST(request: NextRequest) {
       tokenId: shareToken.id,
       patientId: patient.id,
       providerName: employee.name,
-      providerOrg: employee.organization,
+      providerOrg: organization.name,
+      organizationId: organization.id,
       ipAddress: ip,
       userAgent,
       accessMethod: 'employee_id',
@@ -91,7 +106,7 @@ export async function POST(request: NextRequest) {
         : null,
       chartData,
       providerName: employee.name,
-      providerOrg: employee.organization,
+      providerOrg: organization.name,
       disclaimer: MEDICAL_DISCLAIMER,
     })
   } catch (error) {

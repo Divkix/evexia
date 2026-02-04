@@ -1,7 +1,8 @@
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { db } from '../lib/db'
 import {
   employees,
+  organizations,
   patientProviders,
   patients,
   records,
@@ -14,25 +15,38 @@ const DEMO_PATIENT = {
   phone: '555-123-4567',
 }
 
+const DEMO_ORGANIZATIONS = [
+  { slug: 'banner-health', name: 'Banner Health' },
+  { slug: 'mayo-clinic', name: 'Mayo Clinic' },
+  { slug: 'phoenician-medical', name: 'Phoenician Medical Center' },
+]
+
 const DEMO_EMPLOYEES = [
   {
     employeeId: 'EMP-001',
     name: 'Dr. Sarah Chen',
-    organization: 'Banner Health',
+    orgSlug: 'banner-health',
     email: 'sarah.chen@bannerhealth.example',
     department: 'Primary Care',
   },
   {
+    employeeId: 'EMP-001', // Same ID, different org!
+    name: 'Dr. John Smith',
+    orgSlug: 'mayo-clinic',
+    email: 'john.smith@mayoclinic.example',
+    department: 'Internal Medicine',
+  },
+  {
     employeeId: 'EMP-002',
     name: 'Dr. Michael Rivera',
-    organization: 'Mayo Clinic',
+    orgSlug: 'mayo-clinic',
     email: 'michael.rivera@mayoclinic.example',
     department: 'Cardiology',
   },
   {
     employeeId: 'EMP-003',
     name: 'Dr. Emily Watson',
-    organization: 'Phoenician Medical Center',
+    orgSlug: 'phoenician-medical',
     email: 'emily.watson@phoenicianmed.example',
     department: 'Endocrinology',
   },
@@ -244,27 +258,82 @@ async function seed() {
   await db.insert(records).values(recordsToInsert)
   console.log(`Inserted ${recordsToInsert.length} records`)
 
-  // Seed demo employees first (needed for linking providers)
-  console.log('Seeding demo employees...')
-  const employeeIds: Record<string, string> = {}
-  for (const emp of DEMO_EMPLOYEES) {
+  // Seed demo organizations first
+  console.log('Seeding demo organizations...')
+  const orgIds: Record<string, string> = {}
+
+  for (const org of DEMO_ORGANIZATIONS) {
     const existing = await db
       .select()
-      .from(employees)
-      .where(eq(employees.employeeId, emp.employeeId))
+      .from(organizations)
+      .where(eq(organizations.slug, org.slug))
       .limit(1)
 
     if (existing.length === 0) {
-      const [inserted] = await db.insert(employees).values(emp).returning()
-      employeeIds[emp.employeeId] = inserted.id
-      console.log(`Created employee: ${emp.employeeId} - ${emp.name}`)
+      const [inserted] = await db.insert(organizations).values(org).returning()
+      orgIds[org.slug] = inserted.id
+      console.log(`Created organization: ${org.name}`)
+    } else {
+      await db
+        .update(organizations)
+        .set({ name: org.name })
+        .where(eq(organizations.slug, org.slug))
+      orgIds[org.slug] = existing[0].id
+      console.log(`Updated organization: ${org.name}`)
+    }
+  }
+  console.log('Demo organizations seeded')
+
+  // Seed demo employees (needed for linking providers)
+  console.log('Seeding demo employees...')
+  const employeeIds: Record<string, string> = {}
+
+  for (const emp of DEMO_EMPLOYEES) {
+    const orgId = orgIds[emp.orgSlug]
+    if (!orgId) {
+      console.error(`Organization not found for slug: ${emp.orgSlug}`)
+      continue
+    }
+
+    // Check if employee exists for this org
+    const existing = await db
+      .select()
+      .from(employees)
+      .where(
+        and(
+          eq(employees.employeeId, emp.employeeId),
+          eq(employees.organizationId, orgId),
+        ),
+      )
+      .limit(1)
+
+    const employeeData = {
+      employeeId: emp.employeeId,
+      organizationId: orgId,
+      name: emp.name,
+      email: emp.email,
+      department: emp.department,
+    }
+
+    if (existing.length === 0) {
+      const [inserted] = await db
+        .insert(employees)
+        .values(employeeData)
+        .returning()
+      // Use composite key for lookup: orgSlug + employeeId
+      employeeIds[`${emp.orgSlug}:${emp.employeeId}`] = inserted.id
+      console.log(
+        `Created employee: ${emp.employeeId} at ${emp.orgSlug} - ${emp.name}`,
+      )
     } else {
       await db
         .update(employees)
-        .set(emp)
-        .where(eq(employees.employeeId, emp.employeeId))
-      employeeIds[emp.employeeId] = existing[0].id
-      console.log(`Updated employee: ${emp.employeeId} - ${emp.name}`)
+        .set(employeeData)
+        .where(eq(employees.id, existing[0].id))
+      employeeIds[`${emp.orgSlug}:${emp.employeeId}`] = existing[0].id
+      console.log(
+        `Updated employee: ${emp.employeeId} at ${emp.orgSlug} - ${emp.name}`,
+      )
     }
   }
   console.log('Demo employees seeded')
@@ -276,13 +345,13 @@ async function seed() {
 
   await db.insert(patientProviders).values({
     patientId,
-    employeeId: employeeIds['EMP-001'], // Link to Dr. Sarah Chen employee record
+    employeeId: employeeIds['banner-health:EMP-001'], // Link to Dr. Sarah Chen
     providerName: 'Dr. Sarah Chen',
     providerOrg: 'Banner Health',
     providerEmail: 'sarah.chen@bannerhealth.example',
     scope: ['vitals', 'labs', 'meds', 'encounters'],
   })
-  console.log('Created sample provider (linked to EMP-001)')
+  console.log('Created sample provider (linked to EMP-001 at Banner Health)')
 
   console.log('Seed complete!')
   console.log('')
