@@ -52,6 +52,8 @@ export const summaries = pgTable('summaries', {
   clinicianSummary: text('clinician_summary'),
   patientSummary: text('patient_summary'),
   anomalies: jsonb('anomalies'),
+  equityConcerns: jsonb('equity_concerns'),
+  predictions: jsonb('predictions'),
   modelUsed: text('model_used'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })

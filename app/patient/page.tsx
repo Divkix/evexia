@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
 import { HealthCharts } from '@/components/patient/health-charts'
 import { HealthSummary } from '@/components/patient/health-summary'
+import { HealthTrajectory } from '@/components/patient/health-trajectory'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -323,6 +324,9 @@ export default function PatientDashboardPage() {
 
       {/* Health Charts */}
       {chartData && <HealthCharts chartData={chartData} />}
+
+      {/* Predictive Health Trajectory */}
+      <HealthTrajectory patientId={patientId} />
 
       {/* Health Summary - Full width */}
       <HealthSummary patientId={patientId} />

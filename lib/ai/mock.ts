@@ -1,5 +1,10 @@
 import type { Record } from '@/lib/supabase/queries/records'
-import type { Anomaly, SummaryData } from '@/lib/supabase/queries/summaries'
+import type {
+  Anomaly,
+  EquityConcern,
+  Prediction,
+  SummaryData,
+} from '@/lib/supabase/queries/summaries'
 
 interface VitalData {
   date?: string
@@ -19,6 +24,8 @@ interface LabData {
 
 export function generateMockSummary(records: Record[]): SummaryData {
   const anomalies: Anomaly[] = []
+  const equityConcerns: EquityConcern[] = []
+  const predictions: Prediction[] = []
 
   const vitals = records.filter((r) => r.category === 'vitals')
   const labs = records.filter((r) => r.category === 'labs')
@@ -110,6 +117,18 @@ export function generateMockSummary(records: Record[]): SummaryData {
     }
   }
 
+  // Generate health equity concerns based on detected anomalies
+  generateEquityConcerns(
+    equityConcerns,
+    latestBmi,
+    latestBp,
+    latestA1c,
+    latestCholesterol,
+  )
+
+  // Generate predictive risk scores based on trends
+  generatePredictions(predictions, latestBmi, latestA1c, latestBp, anomalies)
+
   // Build summaries
   const clinicianSummary = buildClinicianSummary(
     latestBmi,
@@ -131,7 +150,195 @@ export function generateMockSummary(records: Record[]): SummaryData {
     clinicianSummary,
     patientSummary,
     anomalies,
+    equityConcerns,
+    predictions,
     modelUsed: 'mock-deterministic',
+  }
+}
+
+function generateEquityConcerns(
+  concerns: EquityConcern[],
+  bmi: number | null,
+  bp: string | null,
+  a1c: number | null,
+  cholesterol: number | null,
+): void {
+  // CDC population averages (approximate adult averages)
+  const CDC_AVG_BMI = 26.5
+  const CDC_AVG_A1C = 5.5
+  const CDC_AVG_SYSTOLIC = 122
+  const CDC_AVG_CHOLESTEROL = 192
+
+  if (bmi && bmi > CDC_AVG_BMI) {
+    const gapPercentage = Math.round(((bmi - CDC_AVG_BMI) / CDC_AVG_BMI) * 100)
+    if (gapPercentage > 15) {
+      concerns.push({
+        metric: 'BMI',
+        patientValue: bmi.toString(),
+        populationAverage: CDC_AVG_BMI.toString(),
+        gapPercentage,
+        suggestedAction:
+          'Opportunity for early intervention with nutrition counseling and physical activity program',
+      })
+    }
+  }
+
+  if (a1c && a1c > CDC_AVG_A1C) {
+    const gapPercentage = Math.round(((a1c - CDC_AVG_A1C) / CDC_AVG_A1C) * 100)
+    if (gapPercentage > 15) {
+      concerns.push({
+        metric: 'A1C',
+        patientValue: `${a1c}%`,
+        populationAverage: `${CDC_AVG_A1C}%`,
+        gapPercentage,
+        suggestedAction:
+          'Discuss diabetes prevention program and lifestyle modifications',
+      })
+    }
+  }
+
+  if (bp) {
+    const [systolic] = bp.split('/').map(Number)
+    if (systolic && systolic > CDC_AVG_SYSTOLIC) {
+      const gapPercentage = Math.round(
+        ((systolic - CDC_AVG_SYSTOLIC) / CDC_AVG_SYSTOLIC) * 100,
+      )
+      if (gapPercentage > 15) {
+        concerns.push({
+          metric: 'Blood Pressure (Systolic)',
+          patientValue: bp,
+          populationAverage: `${CDC_AVG_SYSTOLIC}/80`,
+          gapPercentage,
+          suggestedAction:
+            'Consider DASH diet education and sodium intake reduction counseling',
+        })
+      }
+    }
+  }
+
+  if (cholesterol && cholesterol > CDC_AVG_CHOLESTEROL) {
+    const gapPercentage = Math.round(
+      ((cholesterol - CDC_AVG_CHOLESTEROL) / CDC_AVG_CHOLESTEROL) * 100,
+    )
+    if (gapPercentage > 15) {
+      concerns.push({
+        metric: 'Total Cholesterol',
+        patientValue: `${cholesterol} mg/dL`,
+        populationAverage: `${CDC_AVG_CHOLESTEROL} mg/dL`,
+        gapPercentage,
+        suggestedAction:
+          'Discuss heart-healthy diet and potential statin therapy evaluation',
+      })
+    }
+  }
+}
+
+function generatePredictions(
+  predictions: Prediction[],
+  bmi: number | null,
+  a1c: number | null,
+  bp: string | null,
+  anomalies: Anomaly[],
+): void {
+  // Generate diabetes risk prediction if A1C is elevated
+  if (a1c && a1c >= 5.7) {
+    const isPrediabetes = a1c >= 5.7 && a1c < 6.5
+    const isDiabetes = a1c >= 6.5
+
+    if (isPrediabetes) {
+      predictions.push({
+        condition: 'Type 2 Diabetes',
+        currentRisk: 'moderate',
+        probability: 0.58,
+        timeframe: '36 months',
+        trendDirection: 'worsening',
+        actionableSteps: [
+          'Enroll in CDC-recognized Diabetes Prevention Program',
+          'Target 7% body weight loss through diet and exercise',
+          'Schedule quarterly A1C monitoring',
+        ],
+        evidenceBasis:
+          'Based on CDC Diabetes Prevention Program outcomes data showing 58% progression rate without intervention',
+      })
+    } else if (isDiabetes) {
+      predictions.push({
+        condition: 'Diabetic Complications',
+        currentRisk: 'high',
+        probability: 0.72,
+        timeframe: '24 months',
+        trendDirection: 'worsening',
+        actionableSteps: [
+          'Initiate comprehensive diabetes management plan',
+          'Schedule annual retinopathy and nephropathy screening',
+          'Consider referral to endocrinology',
+        ],
+        evidenceBasis:
+          'Based on ADA guidelines for diabetes management and complication prevention',
+      })
+    }
+  }
+
+  // Generate cardiovascular risk prediction if BP is elevated
+  if (bp) {
+    const [systolic] = bp.split('/').map(Number)
+    if (systolic && systolic >= 130) {
+      const risk = systolic >= 140 ? 'high' : 'moderate'
+      const probability = systolic >= 140 ? 0.65 : 0.42
+
+      predictions.push({
+        condition: 'Cardiovascular Disease',
+        currentRisk: risk,
+        probability,
+        timeframe: '60 months',
+        trendDirection: systolic >= 140 ? 'worsening' : 'stable',
+        actionableSteps: [
+          'Implement DASH diet with sodium restriction to <2300mg/day',
+          'Target 150 minutes moderate aerobic activity weekly',
+          'Monitor home blood pressure twice daily',
+        ],
+        evidenceBasis:
+          'Based on Framingham Heart Study risk calculations and ACC/AHA hypertension guidelines',
+      })
+    }
+  }
+
+  // Generate obesity-related risk if BMI is elevated
+  if (bmi && bmi >= 30) {
+    const risk = bmi >= 35 ? 'high' : 'moderate'
+    const probability = bmi >= 35 ? 0.68 : 0.45
+
+    predictions.push({
+      condition: 'Obesity-Related Metabolic Syndrome',
+      currentRisk: risk,
+      probability,
+      timeframe: '24 months',
+      trendDirection: 'stable',
+      actionableSteps: [
+        'Referral to registered dietitian for personalized meal planning',
+        'Structured exercise program starting with 30 min daily walking',
+        'Consider behavioral therapy for sustainable lifestyle changes',
+      ],
+      evidenceBasis:
+        'Based on NIH obesity management guidelines and metabolic syndrome diagnostic criteria',
+    })
+  }
+
+  // If no concerning metrics, add a positive prediction
+  if (predictions.length === 0 && anomalies.length === 0) {
+    predictions.push({
+      condition: 'Overall Health Maintenance',
+      currentRisk: 'low',
+      probability: 0.15,
+      timeframe: '12 months',
+      trendDirection: 'improving',
+      actionableSteps: [
+        'Continue current healthy lifestyle practices',
+        'Maintain routine preventive care schedule',
+        'Complete age-appropriate health screenings',
+      ],
+      evidenceBasis:
+        'Based on USPSTF preventive care recommendations for healthy adults',
+    })
   }
 }
 
