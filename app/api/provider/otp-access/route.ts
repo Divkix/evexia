@@ -14,10 +14,10 @@ import {
 const FULL_SCOPE: RecordCategory[] = ['vitals', 'labs', 'meds', 'encounters']
 
 import {
-  type Anomaly,
   filterAnomaliesByScope,
   getPatientSummary,
   hasFullAccess,
+  parseSummaryAnomalies,
 } from '@/lib/supabase/queries/summaries'
 import { createClient } from '@/lib/supabase/server'
 import { extractChartData } from '@/lib/utils/medical'
@@ -156,7 +156,7 @@ async function handleRequestOtp(request: NextRequest, body: RequestOtpBody) {
             clinicianSummary: summary.clinicianSummary,
             patientSummary: summary.patientSummary,
             anomalies: filterAnomaliesByScope(
-              summary.anomalies as Anomaly[] | null,
+              parseSummaryAnomalies(summary.anomalies).anomalies,
               FULL_SCOPE,
             ),
             hasFullAccess: true,
@@ -306,7 +306,7 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
             clinicianSummary: summary.clinicianSummary,
             patientSummary: summary.patientSummary,
             anomalies: filterAnomaliesByScope(
-              summary.anomalies as Anomaly[] | null,
+              parseSummaryAnomalies(summary.anomalies).anomalies,
               scope,
             ),
             hasFullAccess: hasFullAccess(scope),
@@ -376,7 +376,7 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
           clinicianSummary: summary.clinicianSummary,
           patientSummary: summary.patientSummary,
           anomalies: filterAnomaliesByScope(
-            summary.anomalies as Anomaly[] | null,
+            parseSummaryAnomalies(summary.anomalies).anomalies,
             scope,
           ),
           hasFullAccess: hasFullAccess(scope),
