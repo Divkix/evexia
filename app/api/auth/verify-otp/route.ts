@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { getPatientById, updatePatient } from '@/lib/db/queries/patients'
+import { getPatientById, updatePatient } from '@/lib/supabase/queries/patients'
 import { createClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {

@@ -1,9 +1,9 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { getPatientById } from '@/lib/db/queries/patients'
+import { getPatientById } from '@/lib/supabase/queries/patients'
 import {
   getPatientRecords,
   type RecordCategory,
-} from '@/lib/db/queries/records'
+} from '@/lib/supabase/queries/records'
 import { extractChartData } from '@/lib/utils/medical'
 
 type RouteParams = { params: Promise<{ id: string }> }

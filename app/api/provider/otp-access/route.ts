@@ -1,14 +1,14 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { MEDICAL_DISCLAIMER } from '@/lib/ai/prompts'
-import { logAccess } from '@/lib/db/queries/access-logs'
-import { getEmployeeByEmployeeId } from '@/lib/db/queries/employees'
-import { getPatientById, maskEmail } from '@/lib/db/queries/patients'
-import { getProviderByPatientAndEmployeeId } from '@/lib/db/queries/providers'
+import { logAccess } from '@/lib/supabase/queries/access-logs'
+import { getEmployeeByEmployeeId } from '@/lib/supabase/queries/employees'
+import { getPatientById, maskEmail } from '@/lib/supabase/queries/patients'
+import { getProviderByPatientAndEmployeeId } from '@/lib/supabase/queries/providers'
 import {
   getPatientRecords,
   type RecordCategory,
-} from '@/lib/db/queries/records'
-import { getPatientSummary } from '@/lib/db/queries/summaries'
+} from '@/lib/supabase/queries/records'
+import { getPatientSummary } from '@/lib/supabase/queries/summaries'
 import { createClient } from '@/lib/supabase/server'
 import { extractChartData } from '@/lib/utils/medical'
 

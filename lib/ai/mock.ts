@@ -1,5 +1,5 @@
-import type { Anomaly, SummaryData } from '@/lib/db/queries/summaries'
-import type { Record } from '@/lib/db/schema'
+import type { Record } from '@/lib/supabase/queries/records'
+import type { Anomaly, SummaryData } from '@/lib/supabase/queries/summaries'
 
 interface VitalData {
   date?: string

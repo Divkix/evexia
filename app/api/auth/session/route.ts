@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
-import { getPatientByEmail, getPatientById } from '@/lib/db/queries/patients'
 import { env } from '@/lib/env'
+import {
+  getPatientByEmail,
+  getPatientById,
+} from '@/lib/supabase/queries/patients'
 import { createClient } from '@/lib/supabase/server'
 
 // Demo patient ID for bypass mode - will be set by seed script

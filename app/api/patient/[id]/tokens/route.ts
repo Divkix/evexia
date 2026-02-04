@@ -1,12 +1,12 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { getPatientById } from '@/lib/db/queries/patients'
+import { getPatientById } from '@/lib/supabase/queries/patients'
 import {
   createShareToken,
   deleteToken,
   getPatientTokens,
   getTokenById,
   revokeToken,
-} from '@/lib/db/queries/tokens'
+} from '@/lib/supabase/queries/tokens'
 
 type RouteParams = { params: Promise<{ id: string }> }
 

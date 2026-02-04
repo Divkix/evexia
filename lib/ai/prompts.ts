@@ -1,4 +1,4 @@
-import type { Record } from '@/lib/db/schema'
+import type { Record } from '@/lib/supabase/queries/records'
 
 export function buildMedicalPrompt(records: Record[]): string {
   const vitals = records.filter((r) => r.category === 'vitals')

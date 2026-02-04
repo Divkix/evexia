@@ -1,8 +1,11 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { generateSummary, MEDICAL_DISCLAIMER } from '@/lib/ai/summary'
-import { getPatientById } from '@/lib/db/queries/patients'
-import { getPatientRecords } from '@/lib/db/queries/records'
-import { getPatientSummary, saveSummary } from '@/lib/db/queries/summaries'
+import { getPatientById } from '@/lib/supabase/queries/patients'
+import { getPatientRecords } from '@/lib/supabase/queries/records'
+import {
+  getPatientSummary,
+  saveSummary,
+} from '@/lib/supabase/queries/summaries'
 
 type RouteParams = { params: Promise<{ id: string }> }
 

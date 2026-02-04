@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { getPatientAccessLogsWithTokens } from '@/lib/db/queries/access-logs'
-import { getPatientById } from '@/lib/db/queries/patients'
+import { getPatientAccessLogsWithTokens } from '@/lib/supabase/queries/access-logs'
+import { getPatientById } from '@/lib/supabase/queries/patients'
 
 type RouteParams = { params: Promise<{ id: string }> }
 

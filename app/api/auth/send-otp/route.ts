@@ -1,5 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { getPatientByNameAndDob, maskEmail } from '@/lib/db/queries/patients'
+import {
+  getPatientByNameAndDob,
+  maskEmail,
+} from '@/lib/supabase/queries/patients'
 import { createClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {

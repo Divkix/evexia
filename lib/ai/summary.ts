@@ -1,8 +1,8 @@
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { generateText } from 'ai'
-import type { SummaryData } from '@/lib/db/queries/summaries'
-import type { Record } from '@/lib/db/schema'
 import { env } from '@/lib/env'
+import type { Record } from '@/lib/supabase/queries/records'
+import type { SummaryData } from '@/lib/supabase/queries/summaries'
 import { generateMockSummary } from './mock'
 import { buildMedicalPrompt } from './prompts'
 
