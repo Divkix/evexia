@@ -103,8 +103,8 @@ export default function PatientLoginPage() {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!otpCode || otpCode.length !== 6) {
-      toast.error('Please enter the 6-digit verification code')
+    if (!otpCode || otpCode.length < 6) {
+      toast.error('Please enter the verification code')
       return
     }
 
@@ -159,7 +159,7 @@ export default function PatientLoginPage() {
           <CardDescription>
             {step === 'credentials'
               ? 'Enter your information to receive a verification code'
-              : `Enter the 6-digit code sent to ${maskedEmail}`}
+              : `Enter the code sent to ${maskedEmail}`}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -213,8 +213,8 @@ export default function PatientLoginPage() {
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  maxLength={6}
-                  placeholder="000000"
+                  maxLength={8}
+                  placeholder="00000000"
                   autoComplete="one-time-code"
                   value={otpCode}
                   onChange={(e) => {
