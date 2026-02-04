@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark" style={{ colorScheme: 'dark' }}>
+    <html lang="en" style={{ colorScheme: 'light' }}>
       <body className={`${dmSans.variable} ${fraunces.variable} antialiased`}>
         {children}
         <Toaster richColors position="top-right" />
