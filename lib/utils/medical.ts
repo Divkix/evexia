@@ -28,7 +28,7 @@ interface VitalData {
 
 interface LabData {
   date?: string
-  total_cholesterol?: number
+  totalCholesterol?: number
   a1c?: number
 }
 
@@ -112,11 +112,11 @@ export function extractChartData(records: Record[]): ChartData {
     const date = data.date ?? record.recordDate ?? ''
     const hospital = record.hospital
 
-    if (data.total_cholesterol !== undefined) {
+    if (data.totalCholesterol !== undefined) {
       chartData.cholesterol.push({
         date,
         hospital,
-        value: data.total_cholesterol,
+        value: data.totalCholesterol,
         label: 'Total Cholesterol',
         unit: 'mg/dL',
       })
