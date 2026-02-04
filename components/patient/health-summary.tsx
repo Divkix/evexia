@@ -201,7 +201,7 @@ export function HealthSummary({ patientId }: HealthSummaryProps) {
   const clinicianPoints = summary
     ? formatBulletPoints(summary.clinicianSummary)
     : []
-  const hasAnomalies = summary && summary.anomalies.length > 0
+  const hasAnomalies = summary?.anomalies && summary.anomalies.length > 0
 
   return (
     <div className="space-y-6">
