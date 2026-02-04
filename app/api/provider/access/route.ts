@@ -6,7 +6,12 @@ import { getOrganizationBySlug } from '@/lib/supabase/queries/organizations'
 import { getPatientById } from '@/lib/supabase/queries/patients'
 import type { RecordCategory } from '@/lib/supabase/queries/records'
 import { getPatientRecords } from '@/lib/supabase/queries/records'
-import { getPatientSummary } from '@/lib/supabase/queries/summaries'
+import {
+  type Anomaly,
+  filterAnomaliesByScope,
+  getPatientSummary,
+  hasFullAccess,
+} from '@/lib/supabase/queries/summaries'
 import { getValidShareToken } from '@/lib/supabase/queries/tokens'
 import { extractChartData } from '@/lib/utils/medical'
 
@@ -100,7 +105,14 @@ export async function POST(request: NextRequest) {
         ? {
             clinicianSummary: summary.clinicianSummary,
             patientSummary: summary.patientSummary,
-            anomalies: summary.anomalies,
+            anomalies: filterAnomaliesByScope(
+              summary.anomalies as Anomaly[] | null,
+              shareToken.scope,
+            ),
+            hasFullAccess: hasFullAccess(shareToken.scope),
+            scopeWarning: hasFullAccess(shareToken.scope)
+              ? null
+              : 'This summary may reference data outside your authorized scope.',
           }
         : null,
       chartData,

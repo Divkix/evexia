@@ -1,6 +1,27 @@
 import { createAdminClient } from '../admin'
 import type { Json } from '../database.types'
 import { toCamelCase } from '../utils'
+import type { RecordCategory } from './records'
+
+const FULL_SCOPE: RecordCategory[] = ['vitals', 'labs', 'meds', 'encounters']
+
+/**
+ * Checks if the provided scope includes all record categories.
+ */
+export function hasFullAccess(scope: string[]): boolean {
+  return FULL_SCOPE.every((cat) => scope.includes(cat))
+}
+
+/**
+ * Filters anomalies to only include those matching the provided scope categories.
+ */
+export function filterAnomaliesByScope(
+  anomalies: Anomaly[] | null | undefined,
+  scope: string[],
+): Anomaly[] {
+  if (!anomalies) return []
+  return anomalies.filter((a) => scope.includes(a.category))
+}
 
 export interface Anomaly {
   type: 'high' | 'low' | 'duplicate' | 'missing'

@@ -9,7 +9,12 @@ import {
   getPatientRecords,
   type RecordCategory,
 } from '@/lib/supabase/queries/records'
-import { getPatientSummary } from '@/lib/supabase/queries/summaries'
+import {
+  type Anomaly,
+  filterAnomaliesByScope,
+  getPatientSummary,
+  hasFullAccess,
+} from '@/lib/supabase/queries/summaries'
 import { createClient } from '@/lib/supabase/server'
 import { extractChartData } from '@/lib/utils/medical'
 
@@ -226,7 +231,14 @@ async function handleVerifyOtp(request: NextRequest, body: VerifyOtpBody) {
       ? {
           clinicianSummary: summary.clinicianSummary,
           patientSummary: summary.patientSummary,
-          anomalies: summary.anomalies,
+          anomalies: filterAnomaliesByScope(
+            summary.anomalies as Anomaly[] | null,
+            provider.scope,
+          ),
+          hasFullAccess: hasFullAccess(provider.scope),
+          scopeWarning: hasFullAccess(provider.scope)
+            ? null
+            : 'This summary may reference data outside your authorized scope.',
         }
       : null,
     chartData,
