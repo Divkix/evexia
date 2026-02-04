@@ -182,7 +182,7 @@ export function ConsentExplainerModal({
           {/* Selection and Preview Grid */}
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Left Column: Record Type Selection */}
-            <div className="space-y-4 lg:w-[300px] shrink-0">
+            <div className="space-y-4 lg:w-75 shrink-0">
               <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
                 Select Records to Share
               </h3>
@@ -280,9 +280,9 @@ export function ConsentExplainerModal({
                       What They'll See
                     </h4>
                     <ul className="space-y-1">
-                      {explanation.sharedData.map((item, i) => (
+                      {explanation.sharedData.map((item) => (
                         <li
-                          key={`shared-${i}`}
+                          key={item}
                           className="text-xs text-muted-foreground flex items-start gap-2"
                         >
                           <span className="text-primary mt-0.5">•</span>
@@ -302,9 +302,9 @@ export function ConsentExplainerModal({
                       What They Can Infer
                     </h4>
                     <div className="flex flex-wrap gap-1.5">
-                      {explanation.inferredConditions.map((item, i) => (
+                      {explanation.inferredConditions.map((item) => (
                         <Badge
-                          key={`inferred-${i}`}
+                          key={item}
                           variant="secondary"
                           className="text-xs whitespace-normal text-left"
                         >
@@ -335,8 +335,8 @@ export function ConsentExplainerModal({
                   Based on your selection, providers may be able to infer:
                 </p>
                 <ul className="list-disc list-inside space-y-1">
-                  {explanation.sensitiveInferences.map((item, i) => (
-                    <li key={`sensitive-${i}`} className="text-sm">
+                  {explanation.sensitiveInferences.map((item) => (
+                    <li key={item} className="text-sm">
                       {item}
                     </li>
                   ))}
