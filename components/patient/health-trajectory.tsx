@@ -9,6 +9,7 @@ import {
   TrendingDown,
   TrendingUp,
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -108,6 +109,7 @@ function getTrendIcon(trend: Prediction['trendDirection']) {
 
 function PredictionCard({ prediction }: { prediction: Prediction }) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const router = useRouter()
   const riskConfig = getRiskConfig(prediction.currentRisk)
   const trendConfig = getTrendIcon(prediction.trendDirection)
   const TrendIcon = trendConfig.icon
@@ -200,7 +202,12 @@ function PredictionCard({ prediction }: { prediction: Prediction }) {
         </div>
 
         {/* Discuss with Provider Button */}
-        <Button variant="outline" className="w-full" size="sm">
+        <Button
+          variant="outline"
+          className="w-full"
+          size="sm"
+          onClick={() => router.push('/patient/tokens')}
+        >
           <Activity className="mr-2 h-4 w-4" aria-hidden="true" />
           Discuss with Your Provider
         </Button>
