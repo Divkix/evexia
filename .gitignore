@@ -51,3 +51,6 @@ drizzle/meta
 # Cloudflare
 .open-next
 .wrangler
+
+# Supabase
+supabase/.temp/
