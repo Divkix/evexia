@@ -95,7 +95,7 @@ function FeatureCard({
       <Card
         className={`card-hover h-full border-border/50 bg-card/80 ${
           feature.featured
-            ? 'bg-gradient-to-br from-primary/5 via-card to-card'
+            ? 'bg-linear-to-br from-primary/5 via-card to-card'
             : ''
         }`}
       >
@@ -151,7 +151,7 @@ export default function LandingPage() {
       {/* Hero Section with background pattern */}
       <main className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-6 py-24">
         {/* Subtle background gradient */}
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-primary/[0.03] via-transparent to-transparent" />
+        <div className="absolute inset-0 -z-10 bg-linear-to-b from-primary/3 via-transparent to-transparent" />
         {/* Subtle grid pattern */}
         <div
           className="absolute inset-0 -z-10 opacity-[0.015]"

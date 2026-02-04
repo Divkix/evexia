@@ -11,7 +11,7 @@ function Skeleton({ className, variant = "pulse", ...props }: SkeletonProps) {
       className={cn(
         "rounded-md",
         variant === "shimmer"
-          ? "bg-accent relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent"
+          ? "bg-accent relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/20 before:to-transparent"
           : "bg-accent animate-pulse",
         className
       )}
